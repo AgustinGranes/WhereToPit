@@ -125,44 +125,35 @@ onAuthStateChanged(auth, async (user) => {
         `;
     }
 
-    // Load user data from Firestore
-    console.log("Logged in as:", user.uid, user.email);
-    const docSnap = await getDoc(doc(db, "users", user.uid));
-    
-    // Function to perform initial sync once app.js globals are ready
-    const syncInitialData = async () => {
-      const localFavs = window.WTP_GET_FAVS ? window.WTP_GET_FAVS() : [];
-      const localExps = window.WTP_GET_EXPENSES ? window.WTP_GET_EXPENSES() : [];
-
+    // Real-time listener for user data
+    console.log("Setting up real-time listener for:", user.uid);
+    const unsub = onSnapshot(doc(db, "users", user.uid), (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
-        console.log("Cloud data found:", data);
+        console.log("Real-time update received:", data);
         
-        const cloudFavs = data.favorites || [];
-        const mergedFavs = [...new Set([...localFavs, ...cloudFavs])];
-        const cloudExps = data.expenses || [];
-        const mergedExps = cloudExps.length > 0 ? cloudExps : localExps;
-
-        if (window.WTP_UPDATE_FAVS) window.WTP_UPDATE_FAVS(mergedFavs);
-        if (window.WTP_UPDATE_EXPENSES) window.WTP_UPDATE_EXPENSES(mergedExps);
-        
-        if (localFavs.length > 0 || localExps.length > 0) {
-            window.saveDataToFirebase(mergedFavs, mergedExps);
+        // Only update if data is present to avoid overwriting with defaults
+        if (data.favorites && window.WTP_UPDATE_FAVS) {
+          window.WTP_UPDATE_FAVS(data.favorites);
         }
-      } else {
-        console.log("No cloud data. Initializing with local data.");
-        window.saveDataToFirebase(localFavs, localExps);
+        if (data.expenses && window.WTP_UPDATE_EXPENSES) {
+          window.WTP_UPDATE_EXPENSES(data.expenses);
+        }
       }
-    };
+    }, (error) => {
+      console.error("Snapshot error:", error);
+    });
 
-    // If app.js globals aren't ready, wait for them
-    if (!window.WTP_GET_FAVS || !window.WTP_GET_EXPENSES) {
-        console.log("Waiting for app.js to initialize globals...");
-        document.addEventListener('DOMContentLoaded', syncInitialData, { once: true });
-    } else {
-        syncInitialData();
-    }
+    // Cleanup listener on logout or change
+    window.WTP_AUTH_UNSUB = unsub;
+
   } else {
+    // Cleanup previous listener
+    if (window.WTP_AUTH_UNSUB) {
+      window.WTP_AUTH_UNSUB();
+      window.WTP_AUTH_UNSUB = null;
+    }
+
     currentUser = null;
     loginForm.style.display = 'flex';
     profileData.style.display = 'none';
@@ -187,3 +178,22 @@ onAuthStateChanged(auth, async (user) => {
     }
   }
 });
+
+// Forgot Password Logic
+import { sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+
+const resetBtn = document.getElementById('resetPassBtn');
+if (resetBtn) {
+  resetBtn.addEventListener('click', async () => {
+    const email = authEmail.value.trim();
+    if (!email) return alert('Por favor, ingresá tu email para recuperar la contraseña.');
+    
+    try {
+      await sendPasswordResetEmail(auth, email);
+      alert('Se ha enviado un email para restablecer tu contraseña. Revisá tu casilla (y spam).');
+    } catch (error) {
+      alert('Error: ' + error.message);
+    }
+  });
+}
+

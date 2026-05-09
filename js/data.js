@@ -60,7 +60,7 @@ const PLATFORMS = {
   sfgo_m:        { name:'SFGO Mensual',               type:'Pago', price:1480,     cur:'JPY', url:'https://sfgo.jp' },
   sfgo_a:        { name:'SFGO Anual',                 type:'Pago', price:11880,    cur:'JPY', url:'https://sfgo.jp' },
   superview:     { name:'SuperView Temporada',        type:'Pago', price:60.00,    cur:'AUD', url:'https://www.supercars.com/superview' },
-  supercars_yt:  { name:'Supercars YT Membresía',     type:'Pago', price:200,      cur:'ARS', url:'https://www.youtube.com/@supercars' },
+  supercars_yt:  { name:'Supercars YT Membresía',     type:'Pago', price:150,      cur:'ARS', url:'https://www.youtube.com/@supercars' },
   ttplus:        { name:'TT+ (Live Pass)',            type:'Pago', price:14.99,    cur:'GBP', url:'https://ttplus.iomttraces.com' },
   tcrtv_vip:     { name:'TCR TV VIP (Temporada)',     type:'Pago', price:30.00,    cur:'EUR', url:'https://tcr-series.tv' },
   rx_plus:       { name:'RX+',                        type:'Pago', price:9.99,     cur:'EUR', url:'https://rxplus.tv' },
