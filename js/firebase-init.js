@@ -79,14 +79,17 @@ logoutBtn.addEventListener('click', () => {
 // Sync data to Firestore
 window.saveDataToFirebase = async (favs, expenses) => {
   if (!currentUser) return;
+  console.log("Saving to Firebase...", { favs, expenses });
   try {
     await setDoc(doc(db, "users", currentUser.uid), {
       favorites: favs,
       expenses: expenses,
       updatedAt: new Date()
     }, { merge: true });
+    console.log("Save successful");
   } catch(e) {
     console.error("Error saving to Firebase:", e);
+    alert("Error al guardar en la nube: " + e.message);
   }
 };
 
@@ -126,32 +129,38 @@ onAuthStateChanged(auth, async (user) => {
     console.log("Logged in as:", user.uid, user.email);
     const docSnap = await getDoc(doc(db, "users", user.uid));
     
-    const localFavs = window.WTP_GET_FAVS ? window.WTP_GET_FAVS() : [];
-    const localExps = window.WTP_GET_EXPENSES ? window.WTP_GET_EXPENSES() : [];
+    // Function to perform initial sync once app.js globals are ready
+    const syncInitialData = async () => {
+      const localFavs = window.WTP_GET_FAVS ? window.WTP_GET_FAVS() : [];
+      const localExps = window.WTP_GET_EXPENSES ? window.WTP_GET_EXPENSES() : [];
 
-    if (docSnap.exists()) {
-      const data = docSnap.data();
-      console.log("Cloud data found:", data);
-      
-      // Merge Favorites: Combine both and remove duplicates
-      const cloudFavs = data.favorites || [];
-      const mergedFavs = [...new Set([...localFavs, ...cloudFavs])];
-      
-      // Merge Expenses: Use cloud if it has content, otherwise use local
-      const cloudExps = data.expenses || [];
-      const mergedExps = cloudExps.length > 0 ? cloudExps : localExps;
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        console.log("Cloud data found:", data);
+        
+        const cloudFavs = data.favorites || [];
+        const mergedFavs = [...new Set([...localFavs, ...cloudFavs])];
+        const cloudExps = data.expenses || [];
+        const mergedExps = cloudExps.length > 0 ? cloudExps : localExps;
 
-      if (window.WTP_UPDATE_FAVS) window.WTP_UPDATE_FAVS(mergedFavs);
-      if (window.WTP_UPDATE_EXPENSES) window.WTP_UPDATE_EXPENSES(mergedExps);
-      
-      // If we merged new local data into cloud, save it back
-      if (localFavs.length > 0 || localExps.length > 0) {
-          window.saveDataToFirebase(mergedFavs, mergedExps);
+        if (window.WTP_UPDATE_FAVS) window.WTP_UPDATE_FAVS(mergedFavs);
+        if (window.WTP_UPDATE_EXPENSES) window.WTP_UPDATE_EXPENSES(mergedExps);
+        
+        if (localFavs.length > 0 || localExps.length > 0) {
+            window.saveDataToFirebase(mergedFavs, mergedExps);
+        }
+      } else {
+        console.log("No cloud data. Initializing with local data.");
+        window.saveDataToFirebase(localFavs, localExps);
       }
+    };
+
+    // If app.js globals aren't ready, wait for them
+    if (!window.WTP_GET_FAVS || !window.WTP_GET_EXPENSES) {
+        console.log("Waiting for app.js to initialize globals...");
+        document.addEventListener('DOMContentLoaded', syncInitialData, { once: true });
     } else {
-      console.log("No cloud data. Initializing with local data.");
-      // Create initial doc with current local data
-      window.saveDataToFirebase(localFavs, localExps);
+        syncInitialData();
     }
   } else {
     currentUser = null;
@@ -160,6 +169,12 @@ onAuthStateChanged(auth, async (user) => {
     userEmailDisplay.textContent = '';
     authEmail.value = '';
     authPass.value = '';
+
+    // Clear local data on logout
+    localStorage.removeItem('wtp_favs');
+    localStorage.removeItem('wtp_calc');
+    if (window.WTP_UPDATE_FAVS) window.WTP_UPDATE_FAVS([]);
+    if (window.WTP_UPDATE_EXPENSES) window.WTP_UPDATE_EXPENSES([]);
 
     const navProfile = document.getElementById('navProfile');
     const sidebarProfile = document.getElementById('sidebarProfile');
