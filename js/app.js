@@ -516,6 +516,8 @@ async function submitAddExpense() {
   _calcExpenses.push(newItem);
   closeModal();
   renderCalcList();
+  // Sync to Firebase
+  if (window.saveDataToFirebase) window.saveDataToFirebase(_favorites, _calcExpenses);
 }
 
 async function renderCalcList() {
@@ -553,12 +555,11 @@ async function renderCalcList() {
 
     const row = document.createElement('div');
     row.className = 'calc-row';
-    const isCustom = item.type === 'Custom';
     const commLabel = commission > 0 ? `+${Math.round(commission * 100)}%` : 'sin recargo';
     row.innerHTML = `
       <div class="calc-row-top">
         <span class="calc-row-badge">${item.cur || 'ARS'}</span>
-        <button class="calc-row-remove" onclick="removeExpense(${i})" aria-label="Eliminar">
+        <button class="calc-row-remove" onclick="event.stopPropagation(); removeExpense(${i})" aria-label="Eliminar">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
       </div>
@@ -568,20 +569,75 @@ async function renderCalcList() {
         <div class="calc-row-price">${formatPrice(ars)}</div>
       </div>
     `;
+    row.onclick = () => openEditExpenseModal(i);
     list.appendChild(row);
   }
 
   document.getElementById('calcTotal').textContent = formatPrice(total);
   
-  // Save to local storage & Firebase
+  // Save to local storage only
   localStorage.setItem('wtp_calc', JSON.stringify(_calcExpenses));
-  if (window.saveDataToFirebase) window.saveDataToFirebase(_favorites, _calcExpenses);
 }
 
 window.removeExpense = (index) => {
   _calcExpenses.splice(index, 1);
   renderCalcList();
+  if (window.saveDataToFirebase) window.saveDataToFirebase(_favorites, _calcExpenses);
 };
+
+function openEditExpenseModal(index) {
+  const item = _calcExpenses[index];
+  openAddExpenseModal(); // Open basic modal first
+  
+  const title = document.getElementById('modalTitle');
+  const submitBtn = document.querySelector('.add-submit-btn');
+  
+  title.textContent = 'Editar Gasto';
+  submitBtn.textContent = 'GUARDAR CAMBIOS';
+  submitBtn.onclick = () => submitEditExpense(index);
+
+  const isCustom = item.type === 'Custom';
+  if (isCustom) {
+    window.switchTab('custom');
+    document.getElementById('customName').value = item.name;
+    document.getElementById('customPrice').value = item.price;
+    document.getElementById('customCur').value = item.cur || 'ARS';
+    document.getElementById('customCommission').value = (item.commission || 0) * 100;
+  } else {
+    window.switchTab('sub');
+    // Find key in PLATFORMS
+    const key = Object.keys(PLATFORMS).find(k => PLATFORMS[k].name === item.name);
+    if (key) document.getElementById('addSub').value = key;
+    document.getElementById('subCommissionVal').value = (item.commission || 0) * 100;
+  }
+}
+
+async function submitEditExpense(index) {
+  const isSub = document.getElementById('tabSub')?.classList.contains('active') ?? true;
+  let updatedItem = null;
+
+  if (isSub) {
+    const key = document.getElementById('addSub').value;
+    const p = PLATFORMS[key];
+    const commissionPct = parseFloat(document.getElementById('subCommissionVal')?.value ?? 0) || 0;
+    updatedItem = { ...p, commission: commissionPct / 100, id: _calcExpenses[index].id };
+  } else {
+    const name = document.getElementById('customName').value.trim();
+    const price = parseFloat(document.getElementById('customPrice').value);
+    const cur = document.getElementById('customCur').value;
+    const commissionPct = parseFloat(document.getElementById('customCommission')?.value ?? 0) || 0;
+    if (!name || isNaN(price) || price <= 0) return alert('Datos inválidos');
+    updatedItem = { name, price, cur, type: 'Custom', commission: commissionPct / 100, id: _calcExpenses[index].id };
+  }
+
+  _calcExpenses[index] = updatedItem;
+  closeModal();
+  renderCalcList();
+  if (window.saveDataToFirebase) window.saveDataToFirebase(_favorites, _calcExpenses);
+}
+
+window.openEditExpenseModal = openEditExpenseModal;
+window.submitEditExpense = submitEditExpense;
 
 window.openAddExpenseModal = openAddExpenseModal;
 window.submitAddExpense = submitAddExpense;
