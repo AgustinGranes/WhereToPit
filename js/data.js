@@ -34,6 +34,8 @@ const PLATFORMS = {
   rande:         { name:'ran.de / ProSieben',  type:'Gratis (VPN Alemania)',  url:'https://www.ran.de' },
   abema:         { name:'Abema',               type:'Gratis (VPN Japón)',     url:'https://abema.tv' },
   motorsporttv_f:{ name:'Motorsport.tv',       type:'Gratis',                url:'https://motorsport.tv' },
+  tycsports_g:   { name:'TyC Sports',          type:'Gratis',                url:null },
+  elnueve_g:     { name:'El Nueve',            type:'Gratis',                url:null },
 
   // PIRATAS
   acestrlms:     { name:'Acestrlms',           type:'Pirata',                url:'https://acestrlms.pages.dev/' },
@@ -64,6 +66,7 @@ const PLATFORMS = {
   ttplus:        { name:'TT+ (Live Pass)',            type:'Pago', price:14.99,    cur:'GBP', url:'https://ttplus.iomttraces.com' },
   tcrtv_vip:     { name:'TCR TV VIP (Temporada)',     type:'Pago', price:30.00,    cur:'EUR', url:'https://tcr-series.tv' },
   rx_plus:       { name:'RX+',                        type:'Pago', price:9.99,     cur:'EUR', url:'https://rxplus.tv' },
+  motorplay:     { name:'Motorplay',           type:'Pago', price:6900,      cur:'ARS', url:'https://motorplay.tv/' },
 
   // PAGOS — Streaming General
   dp_std:        { name:'Disney+ Estándar',           type:'Pago', price:19834,    cur:'ARS', url:'https://www.disneyplus.com' },
@@ -161,11 +164,25 @@ const CATEGORIES = [
     platforms:['floracing','sling','youtubetv','acestrlms','rbtv77'] },
   { id:'stock',       name:'Stock Car Brasil',    group:'Stock Cars',
     platforms:['stockcar_yt','globoplay','band','acestrlms','rbtv77'] },
+  { id:'tc',          name:'TC',                 group:'Stock Cars',
+    platforms:['elnueve_g','motorplay','acestrlms','rbtv77'] },
+  { id:'tcp',         name:'TC Pista',           group:'Stock Cars',
+    platforms:['elnueve_g','motorplay','acestrlms','rbtv77'] },
+  { id:'tcm',         name:'TC Mouras',          group:'Stock Cars',
+    platforms:['elnueve_g','motorplay','acestrlms','rbtv77'] },
+  { id:'tcpm',        name:'TC Pista Mouras',    group:'Stock Cars',
+    platforms:['elnueve_g','motorplay','acestrlms','rbtv77'] },
+  { id:'tcpk',        name:'TC Pick Up',         group:'Stock Cars',
+    platforms:['elnueve_g','motorplay','acestrlms','rbtv77'] },
+  { id:'tcppk',       name:'TC Pista Pick Up',   group:'Stock Cars',
+    platforms:['elnueve_g','motorplay','acestrlms','rbtv77'] },
 
   { id:'supercars',   name:'Supercars',          group:'Touring Cars',
     platforms:['superview','supercars_yt','kayo_std','kayo_prem','skynz','tntsports','acestrlms','rbtv77'] },
   { id:'btcc',        name:'BTCC',               group:'Touring Cars',
     platforms:['btcc_yt','itvsport_yt','itvx','tiktok','msptv_m','acestrlms','rbtv77'] },
+  { id:'tc2000',      name:'TC2000',             group:'Touring Cars',
+    platforms:['tycsports_g','acestrlms','rbtv77'] },
   { id:'tcr_world',   name:'TCR World Tour',      group:'Touring Cars',
     platforms:['tcrtv_yt','tcrtv_vip','acestrlms','rbtv77'] },
   { id:'tcr_eu',      name:'TCR Europe',          group:'Touring Cars',

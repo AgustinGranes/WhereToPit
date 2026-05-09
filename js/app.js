@@ -211,7 +211,14 @@ const LOGO_MAP = {
   'tcr_am': 'tcrsouthamerica.png',
   'btrc': 'btrc.png',
   'fdrift': 'formuladrift.png',
-  'driftm': 'driftmasters.png'
+  'driftm': 'driftmasters.png',
+  'tc': 'TC.png',
+  'tc2000': 'TC2000.png',
+  'tcm': 'TCM.png',
+  'tcp': 'TCP.png',
+  'tcpk': 'TCPK.png',
+  'tcpm': 'TCPM.png',
+  'tcppk': 'TCPPK.png'
 };
 
 function buildCategoryRows() {
