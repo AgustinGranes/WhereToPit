@@ -286,11 +286,26 @@ function buildCategoryRows() {
 
     // Arrow scroll logic
     const SCROLL_STEP = 182 * 3; // ~3 cards
-    header.querySelectorAll('.row-arrow').forEach(btn => {
-      btn.addEventListener('click', () => {
-        scroll.scrollBy({ left: parseInt(btn.dataset.dir) * SCROLL_STEP, behavior: 'smooth' });
-      });
+    const btnPrev = header.querySelector('.row-arrow[data-dir="-1"]');
+    const btnNext = header.querySelector('.row-arrow[data-dir="1"]');
+
+    const updateArrows = () => {
+      const { scrollLeft, scrollWidth, clientWidth } = scroll;
+      if (btnPrev) btnPrev.classList.toggle('disabled', scrollLeft <= 0);
+      // Use a small threshold for floating point precision issues
+      if (btnNext) btnNext.classList.toggle('disabled', scrollLeft + clientWidth >= scrollWidth - 5);
+    };
+
+    if (btnPrev) btnPrev.addEventListener('click', () => {
+      scroll.scrollBy({ left: -SCROLL_STEP, behavior: 'smooth' });
     });
+    if (btnNext) btnNext.addEventListener('click', () => {
+      scroll.scrollBy({ left: SCROLL_STEP, behavior: 'smooth' });
+    });
+
+    scroll.addEventListener('scroll', updateArrows, { passive: true });
+    // Initial state after a small delay to ensure cards are rendered
+    setTimeout(updateArrows, 100);
   });
 }
 
@@ -352,8 +367,8 @@ async function buildPlatItem(key) {
   if (p.type.toLowerCase().includes('vpn')) typeClass = 'type-vpn';
   if (!isGratis) {
     typeClass = 'type-pago';
-    const ars = await convertToARS(p.price, p.cur || 'ARS');
-    priceStr = formatPrice(ars) + ' (+8% inc.)';
+    const ars = await convertToARSWithCommission(p.price, p.cur || 'ARS', 0);
+    priceStr = formatPrice(ars);
   }
   if (isPirata) { typeClass = 'type-pirata'; priceStr = 'Pirata'; }
 

@@ -330,6 +330,12 @@ img { display: block; }
 }
 .row-arrow:hover { background: rgba(255,255,255,0.18); }
 .row-arrow:active { transform: scale(0.9); }
+.row-arrow.disabled {
+  opacity: 0.2;
+  cursor: default;
+  pointer-events: none;
+  filter: grayscale(1);
+}
 .row-scroll-wrap { position: relative; }
 .row-scroll {
   display: flex;
