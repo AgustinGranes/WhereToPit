@@ -22,16 +22,16 @@ let _ratesTs  = 0;
 async function fetchRealRates() {
     if (_usdArs && _fxRates && Date.now() - _ratesTs < 3_600_000) return;
 
-    // 1. Dólar MEP (lo que realmente se usa en compras del exterior en Argentina)
+    // 1. Dólar Oficial (base para el cálculo dinámico)
     try {
-        const res = await fetch('https://dolarapi.com/v1/dolares/bolsa');
+        const res = await fetch('https://dolarapi.com/v1/dolares/oficial');
         const data = await res.json();
         const venta = parseFloat(data.venta);
         if (venta > 500 && venta < 5000) {
             _usdArs = venta;
         }
     } catch (_) {}
-    if (!_usdArs) _usdArs = FALLBACK_USD_ARS;
+    if (!_usdArs) _usdArs = 1420;
 
     // 2. Tasas de cruce de monedas desde fxRatesAPI (base USD)
     try {
@@ -65,6 +65,20 @@ async function convertToARS(amount, currency) {
     return amount * arsPerUnit * COMMISSION;
 }
 
+// Version with custom commission (for the calculator)
+async function convertToARSWithCommission(amount, currency, commission) {
+    if (!amount || amount === 0) return 0;
+    await fetchRealRates();
+    const factor = 1 + commission; // e.g. 0.08 => 1.08, 0 => 1
+
+    if (currency === 'ARS') return amount * factor;
+    if (currency === 'USD') return amount * _usdArs * factor;
+
+    const rateVsUsd = _fxRates[currency] ?? FALLBACK_FX[currency] ?? 1;
+    const arsPerUnit = (1 / rateVsUsd) * _usdArs;
+    return amount * arsPerUnit * factor;
+}
+
 function formatPrice(ars) {
     return new Intl.NumberFormat('es-AR', {
         style: 'currency',
@@ -78,5 +92,7 @@ async function getRateSummary() {
     await fetchRealRates();
     const eur = _fxRates?.EUR ? ((1 / _fxRates.EUR) * _usdArs).toFixed(0) : '—';
     const gbp = _fxRates?.GBP ? ((1 / _fxRates.GBP) * _usdArs).toFixed(0) : '—';
-    return `USD Bolsa: $${_usdArs?.toFixed(0)} · 1 EUR = $${eur} · 1 GBP = $${gbp} · +8% inc.`;
+    const jpy = _fxRates?.JPY ? ((1 / _fxRates.JPY) * _usdArs).toFixed(2) : '—';
+    const aud = _fxRates?.AUD ? ((1 / _fxRates.AUD) * _usdArs).toFixed(0) : '—';
+    return `USD: $${_usdArs?.toFixed(0)} · EUR: $${eur} · GBP: $${gbp} · AUD: $${aud} · JPY: $${jpy}`;
 }

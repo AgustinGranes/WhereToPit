@@ -1,5 +1,44 @@
 // ─── GROUPS / ROWS ORDER ──────────────────────────────────────────────────────
-const GROUP_ORDER = ['Todos','Fórmula','Resistencia','Motos','GTs','Rally','Stock Cars','Touring Cars','Drift'];
+const GROUP_ORDER = ['Tus Favoritos', 'Todos','Fórmula','Resistencia','Motos','GTs','Rally','Stock Cars','Touring Cars','Drift'];
+let _favorites = JSON.parse(localStorage.getItem('wtp_favs') || '[]');
+
+function toggleFavorite(e, catId) {
+  if (e) e.stopPropagation();
+  
+  if (window.WTP_IS_LOGGED_IN && !window.WTP_IS_LOGGED_IN()) {
+    return window.WTP_SHOW_AUTH_PROMPT();
+  }
+
+  if (_favorites.includes(catId)) {
+    _favorites = _favorites.filter(id => id !== catId);
+  } else {
+    _favorites.push(catId);
+  }
+  localStorage.setItem('wtp_favs', JSON.stringify(_favorites));
+  // Re-render
+  document.getElementById('rows-container').innerHTML = '';
+  buildCategoryRows();
+  // Update modal button if open
+  const modalFav = document.getElementById('modalFavBtn');
+  if (modalFav && modalFav.dataset.id === catId) {
+    updateModalFavBtn(catId);
+  }
+  
+  // Sync to Firebase
+  if (window.saveDataToFirebase) window.saveDataToFirebase(_favorites, _calcExpenses);
+}
+
+function updateModalFavBtn(catId) {
+  const btn = document.getElementById('modalFavBtn');
+  if (!btn) return;
+  if (_favorites.includes(catId)) {
+    btn.classList.add('active');
+    btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg> Guardado';
+  } else {
+    btn.classList.remove('active');
+    btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg> Guardar';
+  }
+}
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
@@ -8,38 +47,185 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('topNav').classList.toggle('solid', window.scrollY > 10);
   }, { passive: true });
 
+  // Sidebar logic
+  const sidebar = document.getElementById('mobileSidebar');
+  const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+  document.getElementById('mobileMenuBtn').addEventListener('click', () => {
+    sidebar.classList.add('open');
+    sidebarBackdrop.classList.add('open');
+  });
+  const closeSidebar = () => {
+    sidebar.classList.remove('open');
+    sidebarBackdrop.classList.remove('open');
+  };
+  document.getElementById('sidebarCloseBtn').addEventListener('click', closeSidebar);
+  sidebarBackdrop.addEventListener('click', closeSidebar);
+
+  // Logo click -> home
+  document.querySelectorAll('.nav-brand').forEach(brand => {
+    brand.addEventListener('click', () => {
+      const searchInput = document.getElementById('catSearch');
+      if (searchInput) {
+        searchInput.value = '';
+        searchInput.dispatchEvent(new Event('input')); // Trigger search clear
+      }
+      switchView('categories');
+      closeSidebar();
+    });
+  });
+
   // Tab navigation
-  document.querySelectorAll('.nav-link').forEach(link => {
+  document.querySelectorAll('.nav-link, .sidebar-link').forEach(link => {
     link.addEventListener('click', e => {
       e.preventDefault();
       switchView(link.dataset.target);
+      if (link.classList.contains('sidebar-link')) closeSidebar();
     });
   });
+
+  // Search logic
+  const catSearch = document.getElementById('catSearch');
+  if (catSearch) {
+    catSearch.addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      const rowsContainer = document.getElementById('rows-container');
+      const searchContainer = document.getElementById('search-results-container');
+      const billboard = document.querySelector('.billboard');
+
+      if (q.length > 0) {
+        rowsContainer.style.display = 'none';
+        if (billboard) billboard.style.display = 'none';
+        searchContainer.style.display = 'grid';
+        searchContainer.innerHTML = '';
+
+        const results = CATEGORIES.filter(c => c.name.toLowerCase().includes(q));
+        if (results.length === 0) {
+          searchContainer.innerHTML = '<p style="color:var(--text3); grid-column: 1 / -1; text-align:center;">No se encontraron categorías.</p>';
+        } else {
+          results.forEach(cat => {
+            const card = document.createElement('div');
+            card.className = 'cat-card';
+            
+            const logoFile = LOGO_MAP[cat.id];
+            const logoHtml = logoFile 
+              ? `<img src="images/categories/${logoFile}" class="cat-card-logo" alt="${cat.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">`
+              : '';
+
+            const isFav = _favorites.includes(cat.id);
+            card.innerHTML = `
+              <div class="cat-card-glow"></div>
+              <button class="cat-fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite(event, '${cat.id}')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="${isFav ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+              </button>
+              ${logoHtml}
+              <span class="cat-card-name">${cat.name}</span>
+              <span class="cat-card-group">${cat.group}</span>
+            `;
+            card.addEventListener('click', () => openModal(cat));
+            searchContainer.appendChild(card);
+          });
+        }
+      } else {
+        rowsContainer.style.display = 'block';
+        if (billboard) billboard.style.display = 'flex';
+        searchContainer.style.display = 'none';
+        searchContainer.innerHTML = '';
+      }
+    });
+  }
+
+  // Hook up Firebase integration globals
+  window.WTP_GET_FAVS = () => _favorites;
+  window.WTP_GET_EXPENSES = () => _calcExpenses;
+  window.WTP_UPDATE_FAVS = (favs) => {
+    _favorites = favs;
+    localStorage.setItem('wtp_favs', JSON.stringify(_favorites));
+    document.getElementById('rows-container').innerHTML = '';
+    buildCategoryRows();
+  };
+  window.WTP_UPDATE_EXPENSES = (exps) => {
+    _calcExpenses = exps;
+    localStorage.setItem('wtp_calc', JSON.stringify(_calcExpenses));
+    renderCalcList();
+  };
+  
+  // Load expenses from local storage if available
+  _calcExpenses = JSON.parse(localStorage.getItem('wtp_calc') || '[]');
 
   buildCategoryRows();
   buildCalculator();
   // Warm up rates
-  fetchRealRates().then(rates => {
-    const usd = rates['USD'];
-    document.getElementById('rateNote').textContent =
-      `USD Tarjeta: $${usd?.toFixed(0)} · EUR: $${rates['EUR']?.toFixed(0)} · GBP: $${rates['GBP']?.toFixed(0)}`;
+  getRateSummary().then(summary => {
+    document.getElementById('rateNote').textContent = summary;
   });
 });
 
 function switchView(id) {
-  document.querySelectorAll('.nav-link').forEach(l => l.classList.toggle('active', l.dataset.target === id));
+  document.querySelectorAll('.nav-link, .sidebar-link').forEach(l => l.classList.toggle('active', l.dataset.target === id));
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === id));
   window.scrollTo({ top: 0, behavior: 'smooth' });
+  
+  const searchContainer = document.querySelector('.nav-search-container');
+  if (searchContainer) {
+    searchContainer.style.display = id === 'categories' ? 'block' : 'none';
+  }
 }
+window.switchView = switchView;
 
 // ─── BUILD CATEGORY ROWS ──────────────────────────────────────────────────────
+const LOGO_MAP = {
+  'wrc': 'wrc.png',
+  'erx': 'erx.svg',
+  'f1': 'f1.png',
+  'f2': 'f2.png',
+  'f3': 'f3.png',
+  'f4ita': 'f4italian.png',
+  'indynxt': 'indynxt.png',
+  'superf': 'superformula.png',
+  'wec': 'wec.png',
+  'imsa': 'imsa.png',
+  'elms': 'elms.png',
+  'alms': 'alms.png',
+  'nls': 'nls.png',
+  'ewc': 'ewc.png',
+  'gulf12': 'gulf12hours.png',
+  'motogp': 'motogp.png',
+  'moto2': 'moto2.png',
+  'moto3': 'moto3.png',
+  'wsbk': 'worldsbk.png',
+  'iomtt': 'ttisleoftheman.png',
+  'gtworld': 'gtwc.png',
+  'gtwce': 'gtwceurope.png',
+  'gtwca': 'gtwcamerica.svg',
+  'adac': 'adacgtmasters.png',
+  'dtm': 'dtm.png',
+  'nascar_cup': 'nascarcup.png',
+  'nascar_truck': 'nascartruck.png',
+  'nascar_or': 'nascaroreilly.png',
+  'arca': 'arca.png',
+  'stock': 'stockcar.png',
+  'supercars': 'supercars.png',
+  'btcc': 'btcc.png',
+  'tcr_world': 'tcrworldtour.png',
+  'tcr_eu': 'tcreurope.png',
+  'tcr_am': 'tcrsouthamerica.png',
+  'btrc': 'btrc.png',
+  'fdrift': 'formuladrift.png',
+  'driftm': 'driftmasters.png'
+};
+
 function buildCategoryRows() {
   const container = document.getElementById('rows-container');
 
   GROUP_ORDER.forEach(group => {
-    const cats = group === 'Todos'
-      ? [...CATEGORIES].sort((a,b) => a.name.localeCompare(b.name))
-      : CATEGORIES.filter(c => c.group === group);
+    let cats = [];
+    if (group === 'Tus Favoritos') {
+      cats = _favorites.map(id => CATEGORIES.find(c => c.id === id)).filter(Boolean);
+    } else if (group === 'Todos') {
+      cats = [...CATEGORIES].sort((a,b) => a.name.localeCompare(b.name));
+    } else {
+      cats = CATEGORIES.filter(c => c.group === group);
+    }
 
     if (cats.length === 0) return;
 
@@ -67,7 +253,19 @@ function buildCategoryRows() {
     cats.forEach(cat => {
       const card = document.createElement('div');
       card.className = 'cat-card';
+      
+      const logoFile = LOGO_MAP[cat.id];
+      const logoHtml = logoFile 
+        ? `<img src="images/categories/${logoFile}" class="cat-card-logo" alt="${cat.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">`
+        : '';
+
+      const isFav = _favorites.includes(cat.id);
       card.innerHTML = `
+        <div class="cat-card-glow"></div>
+        <button class="cat-fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite(event, '${cat.id}')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="${isFav ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+        </button>
+        ${logoHtml}
         <span class="cat-card-name">${cat.name}</span>
         <span class="cat-card-group">${cat.group}</span>
       `;
@@ -97,6 +295,20 @@ async function openModal(cat) {
   _modalOpen = true;
 
   document.getElementById('modalTitle').textContent = cat.name;
+  
+  // Add Fav Button to modal header actions
+  const modalActions = document.getElementById('modalHeaderActions');
+  let oldBtn = document.getElementById('modalFavBtn');
+  if (oldBtn) oldBtn.remove();
+  
+  const favBtn = document.createElement('button');
+  favBtn.id = 'modalFavBtn';
+  favBtn.dataset.id = cat.id;
+  favBtn.className = 'modal-fav-btn';
+  favBtn.onclick = () => toggleFavorite(null, cat.id);
+  modalActions.prepend(favBtn);
+  updateModalFavBtn(cat.id);
+
   const body = document.getElementById('modalBody');
   body.innerHTML = '<p style="color:var(--text2);text-align:center;padding:24px 0">Cargando precios...</p>';
 
@@ -164,71 +376,213 @@ function closeModal() {
 }
 
 // ─── CALCULATOR ───────────────────────────────────────────────────────────────
+let _calcExpenses = []; // { name, price, cur, id }
+
 function buildCalculator() {
-  const list = document.getElementById('calcList');
-
-  // Group paid platforms by category group
-  const paidKeys = Object.keys(PLATFORMS).filter(k => {
-    const p = PLATFORMS[k];
-    return p.price != null && p.price > 0 && p.type !== 'Pirata';
-  });
-
-  // Group labels
-  const groups = {
-    'Oficiales Motorsport': ['rallytv_m','rallytv_a','f1tv_m','f1tv_a','fiawec_r','fiawec_s','fiawec_le','vp_moto_s','vp_moto_t','vp_sbk','msptv_m','msptv_a','floracing','indycar_m','indycar_s','sfgo_m','sfgo_a','superview','supercars_yt','ttplus','tcrtv_vip','rx_plus'],
-    'Streaming General': ['dp_std','dp_prem','max_basic','max_std','max_prem','peacock_s','peacock_p','peacock_pp','espnplus','viaplay','dazn_motor','dazn_full','tntsports','kayo_std','kayo_prem','stan_basic','stan_std','stan_prem','skysports','skynz','globoplay','canalplus','jsports'],
-    'TV Cable / EEUU': ['sling','youtubetv'],
-  };
-
-  Object.entries(groups).forEach(([groupName, keys]) => {
-    const title = document.createElement('div');
-    title.className = 'calc-group-title';
-    title.textContent = groupName;
-    list.appendChild(title);
-
-    keys.forEach(k => {
-      const p = PLATFORMS[k];
-      if (!p) return;
-      const row = document.createElement('div');
-      row.className = 'calc-row';
-      row.id = `calc-row-${k}`;
-
-      row.innerHTML = `
-        <div class="calc-row-info">
-          <div class="calc-row-name">${p.name}</div>
-          <div class="calc-row-price">${p.price} ${p.cur || 'ARS'} · <span class="ars-price" id="ars-${k}">calculando...</span></div>
-        </div>
-        <label class="toggle">
-          <input type="checkbox" data-key="${k}" class="calc-cb">
-          <div class="toggle-track"></div>
-          <div class="toggle-thumb"></div>
-        </label>
-      `;
-      list.appendChild(row);
-
-      // Fill ARS price async
-      convertToARS(p.price, p.cur || 'ARS').then(ars => {
-        const el = document.getElementById(`ars-${k}`);
-        if (el) el.textContent = formatPrice(ars) + ' c/8%';
-      });
-    });
-  });
-
-  // Listeners
-  list.addEventListener('change', e => {
-    if (e.target.classList.contains('calc-cb')) {
-      e.target.closest('.calc-row').classList.toggle('checked', e.target.checked);
-      updateTotal();
-    }
-  });
+  // Now it's dynamic, we just render the list (which starts empty)
+  renderCalcList();
 }
 
-async function updateTotal() {
-  const checked = document.querySelectorAll('.calc-cb:checked');
-  let total = 0;
-  for (const cb of checked) {
-    const p = PLATFORMS[cb.dataset.key];
-    if (p) total += await convertToARS(p.price, p.cur || 'ARS');
+function openAddExpenseModal() {
+  if (window.WTP_IS_LOGGED_IN && !window.WTP_IS_LOGGED_IN()) {
+    return window.WTP_SHOW_AUTH_PROMPT();
   }
-  document.getElementById('calcTotal').textContent = formatPrice(total);
+  const modal = document.getElementById('modal');
+  const title = document.getElementById('modalTitle');
+  const body = document.getElementById('modalBody');
+
+  title.textContent = 'Agregar Gasto';
+  
+  const subOptions = Object.entries(PLATFORMS)
+    .filter(([_, p]) => p.price != null && p.price > 0 && p.type !== 'Pirata')
+    .sort((a, b) => a[1].name.localeCompare(b[1].name))
+    .map(([k, p]) => `<option value="${k}">${p.name} — ${p.price} ${p.cur || 'ARS'}</option>`)
+    .join('');
+
+  body.innerHTML = `
+    <div class="add-form">
+      <div class="add-type-tabs">
+        <button class="add-type-tab active" id="tabSub" onclick="switchTab('sub')">📺 Suscripción</button>
+        <button class="add-type-tab" id="tabCustom" onclick="switchTab('custom')">✏️ Personalizado</button>
+      </div>
+
+      <div id="subFields">
+        <div class="form-group">
+          <label>Plataforma</label>
+          <select class="form-select" id="addSub">
+            ${subOptions}
+          </select>
+        </div>
+        <div class="form-group" style="margin-top:16px">
+          <label>Impuesto / Recargo (%)</label>
+          <div class="commission-presets">
+            <button type="button" class="preset-btn" onclick="setSubCommission(0)">Sin recargo</button>
+            <button type="button" class="preset-btn" onclick="setSubCommission(8)">8%</button>
+            <button type="button" class="preset-btn" onclick="setSubCommission(21)">21%</button>
+            <button type="button" class="preset-btn" onclick="setSubCommission(30)">30%</button>
+          </div>
+          <div class="commission-input-wrap">
+            <input type="number" class="form-input" id="subCommissionVal" placeholder="0" min="0" max="200" step="0.5" value="0">
+            <span class="commission-unit">%</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="customFields" style="display:none">
+        <div class="form-group">
+          <label>Nombre del gasto</label>
+          <input type="text" class="form-input" id="customName" placeholder="Ej: IPTV, Cable, Netflix...">
+        </div>
+        <div class="form-row" style="margin-top:16px">
+          <div class="form-group">
+            <label>Precio base</label>
+            <input type="number" class="form-input" id="customPrice" placeholder="0.00" step="0.01">
+          </div>
+          <div class="form-group">
+            <label>Moneda</label>
+            <select class="form-select" id="customCur">
+              <option value="ARS">ARS</option>
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+              <option value="GBP">GBP</option>
+              <option value="JPY">JPY</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:16px">
+          <label>Impuesto / Recargo (%)</label>
+          <div class="commission-presets">
+            <button type="button" class="preset-btn" onclick="setCommission(0)">Sin recargo</button>
+            <button type="button" class="preset-btn" onclick="setCommission(8)">8%</button>
+            <button type="button" class="preset-btn" onclick="setCommission(21)">21%</button>
+            <button type="button" class="preset-btn" onclick="setCommission(30)">30%</button>
+          </div>
+          <div class="commission-input-wrap">
+            <input type="number" class="form-input" id="customCommission" placeholder="0" min="0" max="200" step="0.5" value="0">
+            <span class="commission-unit">%</span>
+          </div>
+        </div>
+      </div>
+
+
+      <button class="add-submit-btn" onclick="submitAddExpense()">AGREGAR A LA LISTA</button>
+    </div>
+  `;
+
+  document.getElementById('modalBackdrop').classList.add('open');
+  modal.classList.add('open');
+  _modalOpen = true;
 }
+
+// Global for the modal scope
+window.switchTab = (val) => {
+  document.getElementById('tabSub').classList.toggle('active', val === 'sub');
+  document.getElementById('tabCustom').classList.toggle('active', val === 'custom');
+  document.getElementById('subFields').style.display = val === 'sub' ? 'block' : 'none';
+  document.getElementById('customFields').style.display = val === 'custom' ? 'block' : 'none';
+};
+window.toggleAddFields = window.switchTab;
+
+window.setCommission = (val) => {
+  const el = document.getElementById('customCommission');
+  if (el) el.value = val;
+};
+window.setSubCommission = (val) => {
+  const el = document.getElementById('subCommissionVal');
+  if (el) el.value = val;
+};
+
+async function submitAddExpense() {
+  const isSub = document.getElementById('tabSub')?.classList.contains('active') ?? true;
+  let newItem = null;
+
+  if (isSub) {
+    const key = document.getElementById('addSub').value;
+    const p = PLATFORMS[key];
+    const commissionPct = parseFloat(document.getElementById('subCommissionVal')?.value ?? 0) || 0;
+    newItem = { ...p, commission: commissionPct / 100, id: Date.now() + Math.random() };
+  } else {
+    const name = document.getElementById('customName').value.trim();
+    const price = parseFloat(document.getElementById('customPrice').value);
+    const cur = document.getElementById('customCur').value;
+    const commissionPct = parseFloat(document.getElementById('customCommission')?.value ?? 0) || 0;
+    if (!name || isNaN(price) || price <= 0) {
+      alert('Por favor ingresá un nombre y precio válido');
+      return;
+    }
+    newItem = { name, price, cur, type: 'Custom', commission: commissionPct / 100, id: Date.now() + Math.random() };
+  }
+
+  _calcExpenses.push(newItem);
+  closeModal();
+  renderCalcList();
+}
+
+async function renderCalcList() {
+  const list = document.getElementById('calcList');
+  list.innerHTML = '';
+  
+  // 1. Add the "Add Expense" Card
+  const addBtn = document.createElement('button');
+  addBtn.className = 'add-expense-btn';
+  addBtn.onclick = openAddExpenseModal;
+  addBtn.innerHTML = `
+    <div class="add-icon-circle">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+    </div>
+    <span>Agregar Gasto</span>
+  `;
+  list.appendChild(addBtn);
+
+  if (_calcExpenses.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'calc-empty-state';
+    empty.textContent = 'No hay otros gastos agregados.';
+    list.appendChild(empty);
+    document.getElementById('calcTotal').textContent = '$ 0';
+    return;
+  }
+
+  let total = 0;
+  for (let i = 0; i < _calcExpenses.length; i++) {
+    const item = _calcExpenses[i];
+    // Use the item's own commission; default 0 (no tax)
+    const commission = item.commission ?? 0;
+    const ars = await convertToARSWithCommission(item.price, item.cur || 'ARS', commission);
+    total += ars;
+
+    const row = document.createElement('div');
+    row.className = 'calc-row';
+    const isCustom = item.type === 'Custom';
+    const commLabel = commission > 0 ? `+${Math.round(commission * 100)}%` : 'sin recargo';
+    row.innerHTML = `
+      <div class="calc-row-top">
+        <span class="calc-row-badge">${isCustom ? 'CUSTOM' : (item.cur || 'ARS')}</span>
+        <button class="calc-row-remove" onclick="removeExpense(${i})" aria-label="Eliminar">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      <div class="calc-row-info">
+        <div class="calc-row-name">${item.name}</div>
+        <div class="calc-row-original">${item.price} ${item.cur || 'ARS'} · ${commLabel}</div>
+        <div class="calc-row-price">${formatPrice(ars)}</div>
+      </div>
+    `;
+    list.appendChild(row);
+  }
+
+  document.getElementById('calcTotal').textContent = formatPrice(total);
+  
+  // Save to local storage & Firebase
+  localStorage.setItem('wtp_calc', JSON.stringify(_calcExpenses));
+  if (window.saveDataToFirebase) window.saveDataToFirebase(_favorites, _calcExpenses);
+}
+
+window.removeExpense = (index) => {
+  _calcExpenses.splice(index, 1);
+  renderCalcList();
+};
+
+window.openAddExpenseModal = openAddExpenseModal;
+window.submitAddExpense = submitAddExpense;
+
