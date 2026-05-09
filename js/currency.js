@@ -1,6 +1,6 @@
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 const FX_API_KEY = 'fxr_live_a11627c992803c65baf4ada7ed8a3c8e8691';
-const COMMISSION  = 1.08; // +8% comisión tarjeta
+const COMMISSION  = 1.00; // Comisión base (sin el 8% por defecto)
 
 // Fallback en caso de fallo total de la API
 // Basado en tasas aproximadas al 09-May-2026

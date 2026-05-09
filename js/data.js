@@ -99,7 +99,7 @@ const PLATFORMS = {
 // ─── CATEGORIES ──────────────────────────────────────────────────────────────
 const CATEGORIES = [
   { id:'wrc',         name:'WRC',               group:'Rally',
-    platforms:['rallytv_m','rallytv_a','itvx','redbulltv','servustv','acestrlms','rbtv77'] },
+    platforms:['rallytv_m','rallytv_a','rallytv_m_jp','rallytv_a_jp','itvx','redbulltv','servustv','acestrlms','rbtv77'] },
   { id:'erx',         name:'World RX',           group:'Rally',
     platforms:['erx_yt','rx_plus','rallytv_m','rallytv_a','acestrlms','rbtv77'] },
 
