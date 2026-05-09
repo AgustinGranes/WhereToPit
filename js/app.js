@@ -465,7 +465,7 @@ function openAddExpenseModal() {
       </div>
 
 
-      <button class="add-submit-btn" onclick="submitAddExpense()">AGREGAR A LA LISTA</button>
+      <button id="modalSubmitBtn" class="add-submit-btn" onclick="submitAddExpense()">AGREGAR A LA LISTA</button>
     </div>
   `;
 
@@ -590,11 +590,13 @@ function openEditExpenseModal(index) {
   openAddExpenseModal(); // Open basic modal first
   
   const title = document.getElementById('modalTitle');
-  const submitBtn = document.querySelector('.add-submit-btn');
+  const submitBtn = document.getElementById('modalSubmitBtn');
   
-  title.textContent = 'Editar Gasto';
-  submitBtn.textContent = 'GUARDAR CAMBIOS';
-  submitBtn.onclick = () => submitEditExpense(index);
+  if (title) title.textContent = 'Editar Gasto';
+  if (submitBtn) {
+    submitBtn.textContent = 'GUARDAR CAMBIOS';
+    submitBtn.onclick = () => submitEditExpense(index);
+  }
 
   const isCustom = item.type === 'Custom';
   if (isCustom) {
