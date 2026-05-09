@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>WhereToPit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+<!-- ── TOP NAV ─────────────────────────────────────────────── -->
+<header class="top-nav" id="topNav">
+  <div class="nav-brand">
+    <img src="images/logo.png" alt="WhereToPit" class="nav-logo">
+  </div>
+  <nav class="nav-links">
+    <a class="nav-link active" data-target="categories">Categorías</a>
+    <a class="nav-link" data-target="calculator">Calculadora</a>
+  </nav>
+</header>
+
+<!-- ── MAIN ────────────────────────────────────────────────── -->
+<main class="main">
+
+  <!-- CATEGORIES (default view) -->
+  <section id="categories" class="view active">
+    <!-- Billboard hero — Netflix style featured card -->
+    <div class="billboard">
+      <div class="billboard-bg"></div>
+      <div class="billboard-content">
+        <span class="billboard-badge">🏁 Motorsport</span>
+        <h1 class="billboard-title">Motorsport. <span>Todo.</span></h1>
+        <p class="billboard-sub">Encontrá dónde ver cada categoría desde Argentina.</p>
+        <div class="billboard-actions">
+          <button class="billboard-btn" onclick="document.getElementById('rows-container').scrollIntoView({behavior:'smooth'})">Explorar Categorías</button>
+          <button class="billboard-btn-ghost" onclick="document.querySelector('[data-target=calculator]').click()">Calcular Costos</button>
+        </div>
+      </div>
+    </div>
+    <div id="rows-container"></div>
+  </section>
+
+  <!-- CALCULATOR -->
+  <section id="calculator" class="view">
+    <div class="calc-header">
+      <h2 class="section-title">Calculadora de Gastos</h2>
+      <p class="section-sub">Precios convertidos en vivo · +8% comisión tarjeta incluido</p>
+      <div class="calc-total-box">
+        <span class="total-label">Total mensual estimado</span>
+        <span class="total-amount" id="calcTotal">$ 0</span>
+        <span class="total-note" id="rateNote">Cargando cotización...</span>
+      </div>
+    </div>
+    <div class="calc-list" id="calcList"></div>
+  </section>
+
+</main>
+
+<!-- ── MODAL ────────────────────────────────────────────────── -->
+<div class="modal-backdrop" id="modalBackdrop" onclick="closeModal()"></div>
+<div class="modal" id="modal">
+  <div class="modal-handle"></div>
+  <div class="modal-head">
+    <h2 class="modal-title" id="modalTitle">—</h2>
+    <button class="modal-close" onclick="closeModal()">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+  <div class="modal-body" id="modalBody"></div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/currency.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
