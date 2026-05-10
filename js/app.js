@@ -29,12 +29,24 @@ function toggleFavorite(e, catId) {
   buildCategoryRows();
 
   // Restore scroll positions
-  Object.keys(scrollPositions).forEach(rowId => {
-    const row = document.getElementById(rowId);
-    if (row) {
-      const scrollEl = row.querySelector('.row-scroll');
-      if (scrollEl) scrollEl.scrollLeft = scrollPositions[rowId];
-    }
+  requestAnimationFrame(() => {
+    Object.keys(scrollPositions).forEach(rowId => {
+      const row = document.getElementById(rowId);
+      if (row) {
+        const scrollEl = row.querySelector('.row-scroll');
+        if (scrollEl) {
+          const originalSnap = scrollEl.style.scrollSnapType;
+          scrollEl.style.scrollSnapType = 'none';
+          scrollEl.style.scrollBehavior = 'auto';
+          scrollEl.scrollLeft = scrollPositions[rowId];
+          // Restore after a tiny delay to let the browser process the jump
+          setTimeout(() => {
+            scrollEl.style.scrollBehavior = '';
+            scrollEl.style.scrollSnapType = originalSnap;
+          }, 10);
+        }
+      }
+    });
   });
   // Update modal button if open
   const modalFav = document.getElementById('modalFavBtn');
