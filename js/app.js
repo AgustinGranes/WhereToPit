@@ -377,6 +377,9 @@ async function openModal(cat) {
 
   // Sort: gratis first, then pago, then pirata last
   const sorted = [...cat.platforms].sort((a, b) => {
+    // rbtv77 is ALWAYS the very last item
+    if (a === 'rbtv77') return 1;
+    if (b === 'rbtv77') return -1;
     const ta = (PLATFORMS[a]?.type || '').toLowerCase();
     const tb = (PLATFORMS[b]?.type || '').toLowerCase();
     if (ta === 'pirata' && tb !== 'pirata') return 1;
