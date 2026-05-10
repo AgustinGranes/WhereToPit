@@ -235,7 +235,7 @@ const LOGO_MAP = {
   'nascar_or': 'nascaroreilly.png',
   'arca': 'arca.png',
   'f2arg': 'formula2arg.png',
-  'f3arg': 'formula3arg.jpg',
+  'f3arg': 'formula3arg.png',
   'fnac': 'formulanacional.png',
   'fiat': 'fiatcompetizione.svg',
   'procar': 'procar.png',
