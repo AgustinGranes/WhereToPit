@@ -347,6 +347,8 @@ img { display: block; }
   -ms-overflow-style: none;
   scrollbar-width: none;
   scroll-behavior: smooth;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
   /* Align all items to the same baseline */
   align-items: stretch;
 }
@@ -370,6 +372,9 @@ img { display: block; }
   overflow: hidden;
   box-sizing: border-box;
   padding: 10px 10px 14px;
+}
+.cat-card:last-child {
+  scroll-snap-align: end;
 }
 .cat-card:hover { 
   transform: scale(1.08); 

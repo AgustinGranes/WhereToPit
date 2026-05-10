@@ -15,9 +15,27 @@ function toggleFavorite(e, catId) {
     _favorites.push(catId);
   }
   localStorage.setItem('wtp_favs', JSON.stringify(_favorites));
+  // Save scroll positions
+  const scrollPositions = {};
+  document.querySelectorAll('.row').forEach(row => {
+    const scrollEl = row.querySelector('.row-scroll');
+    if (row.id && scrollEl) {
+      scrollPositions[row.id] = scrollEl.scrollLeft;
+    }
+  });
+
   // Re-render
   document.getElementById('rows-container').innerHTML = '';
   buildCategoryRows();
+
+  // Restore scroll positions
+  Object.keys(scrollPositions).forEach(rowId => {
+    const row = document.getElementById(rowId);
+    if (row) {
+      const scrollEl = row.querySelector('.row-scroll');
+      if (scrollEl) scrollEl.scrollLeft = scrollPositions[rowId];
+    }
+  });
   // Update modal button if open
   const modalFav = document.getElementById('modalFavBtn');
   if (modalFav && modalFav.dataset.id === catId) {
@@ -182,6 +200,7 @@ const LOGO_MAP = {
   'f4ita': 'f4italian.png',
   'indynxt': 'indynxt.png',
   'superf': 'superformula.png',
+  'indycar': 'indycar.png',
   'wec': 'wec.png',
   'imsa': 'imsa.png',
   'elms': 'elms.png',
@@ -203,6 +222,12 @@ const LOGO_MAP = {
   'nascar_truck': 'nascartruck.png',
   'nascar_or': 'nascaroreilly.png',
   'arca': 'arca.png',
+  'f2arg': 'formula2arg.png',
+  'f3arg': 'formula3arg.jpg',
+  'fnac': 'formulanacional.png',
+  'fiat': 'fiatcompetizione.svg',
+  'procar': 'procar.png',
+  'toprace': 'toprace.png',
   'stock': 'stockcar.png',
   'supercars': 'supercars.png',
   'btcc': 'btcc.png',
@@ -216,6 +241,8 @@ const LOGO_MAP = {
   'tc2000': 'TC2000.png',
   'tcm': 'TCM.png',
   'tcp': 'TCP.png',
+  'tn': 'turismonacional.png',
+  'tp': 'turismopista.png',
   'tcpk': 'TCPK.png',
   'tcpm': 'TCPM.png',
   'tcppk': 'TCPPK.png'
@@ -238,6 +265,7 @@ function buildCategoryRows() {
 
     const row = document.createElement('div');
     row.className = 'row';
+    row.id = `row-${group.replace(/\s+/g, '-').toLowerCase()}`;
 
     // Header: title + arrows
     const header = document.createElement('div');
