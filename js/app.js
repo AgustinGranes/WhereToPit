@@ -4,57 +4,55 @@ let _favorites = JSON.parse(localStorage.getItem('wtp_favs') || '[]');
 
 function toggleFavorite(e, catId) {
   if (e) e.stopPropagation();
-  
+
   if (window.WTP_IS_LOGGED_IN && !window.WTP_IS_LOGGED_IN()) {
     return window.WTP_SHOW_AUTH_PROMPT();
   }
 
-  if (_favorites.includes(catId)) {
+  const isFav = _favorites.includes(catId);
+  if (isFav) {
     _favorites = _favorites.filter(id => id !== catId);
   } else {
     _favorites.push(catId);
   }
   localStorage.setItem('wtp_favs', JSON.stringify(_favorites));
-  // Save scroll positions
-  const scrollPositions = {};
-  document.querySelectorAll('.row').forEach(row => {
-    const scrollEl = row.querySelector('.row-scroll');
-    if (row.id && scrollEl) {
-      scrollPositions[row.id] = scrollEl.scrollLeft;
+
+  // ── 1. Update all star buttons for this cat in-place (no DOM rebuild) ──
+  const nowFav = _favorites.includes(catId);
+  document.querySelectorAll('.cat-fav-btn').forEach(btn => {
+    // Match by the onclick attribute content
+    const onclick = btn.getAttribute('onclick') || '';
+    if (onclick.includes(`'${catId}'`)) {
+      btn.classList.toggle('active', nowFav);
+      const svg = btn.querySelector('svg');
+      if (svg) svg.setAttribute('fill', nowFav ? 'currentColor' : 'none');
     }
   });
 
-  // Re-render
-  document.getElementById('rows-container').innerHTML = '';
-  buildCategoryRows();
+  // ── 2. Only rebuild the "Tus Favoritos" row ──
+  const favRowId = 'row-tus-favoritos';
+  const existingFavRow = document.getElementById(favRowId);
+  const container = document.getElementById('rows-container');
+  const newFavCats = _favorites.map(id => CATEGORIES.find(c => c.id === id)).filter(Boolean);
 
-  // Restore scroll positions
-  requestAnimationFrame(() => {
-    Object.keys(scrollPositions).forEach(rowId => {
-      const row = document.getElementById(rowId);
-      if (row) {
-        const scrollEl = row.querySelector('.row-scroll');
-        if (scrollEl) {
-          const originalSnap = scrollEl.style.scrollSnapType;
-          scrollEl.style.scrollSnapType = 'none';
-          scrollEl.style.scrollBehavior = 'auto';
-          scrollEl.scrollLeft = scrollPositions[rowId];
-          // Restore after a tiny delay to let the browser process the jump
-          setTimeout(() => {
-            scrollEl.style.scrollBehavior = '';
-            scrollEl.style.scrollSnapType = originalSnap;
-          }, 10);
-        }
-      }
-    });
-  });
-  // Update modal button if open
+  if (newFavCats.length === 0) {
+    if (existingFavRow) existingFavRow.remove();
+  } else {
+    const newRow = buildSingleRow('Tus Favoritos', newFavCats);
+    if (existingFavRow) {
+      container.replaceChild(newRow, existingFavRow);
+    } else {
+      container.insertBefore(newRow, container.firstChild);
+    }
+  }
+
+  // ── 3. Update modal fav button if open ──
   const modalFav = document.getElementById('modalFavBtn');
   if (modalFav && modalFav.dataset.id === catId) {
     updateModalFavBtn(catId);
   }
-  
-  // Sync to Firebase
+
+  // ── 4. Sync to Firebase ──
   if (window.saveDataToFirebase) window.saveDataToFirebase(_favorites, _calcExpenses);
 }
 
@@ -260,6 +258,74 @@ const LOGO_MAP = {
   'tcppk': 'TCPPK.png'
 };
 
+function buildSingleRow(group, cats) {
+  const row = document.createElement('div');
+  row.className = 'row';
+  row.id = `row-${group.replace(/\s+/g, '-').toLowerCase()}`;
+
+  const header = document.createElement('div');
+  header.className = 'row-header';
+  header.innerHTML = `
+    <h3 class="row-title">${group} <span>${cats.length} categorías</span></h3>
+    <div class="row-arrows">
+      <button class="row-arrow" data-dir="-1" aria-label="Anterior">&#8249;</button>
+      <button class="row-arrow" data-dir="1" aria-label="Siguiente">&#8250;</button>
+    </div>
+  `;
+  row.appendChild(header);
+
+  const wrap = document.createElement('div');
+  wrap.className = 'row-scroll-wrap';
+
+  const scroll = document.createElement('div');
+  scroll.className = 'row-scroll';
+
+  cats.forEach(cat => {
+    const card = document.createElement('div');
+    card.className = 'cat-card';
+
+    const logoFile = LOGO_MAP[cat.id];
+    const logoHtml = logoFile
+      ? `<img src="images/categories/${logoFile}" class="cat-card-logo" alt="${cat.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">`
+      : '';
+
+    const isFav = _favorites.includes(cat.id);
+    card.innerHTML = `
+      <div class="cat-card-glow"></div>
+      <button class="cat-fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite(event, '${cat.id}')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="${isFav ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+      </button>
+      ${logoHtml}
+      <span class="cat-card-name">${cat.name}</span>
+      <span class="cat-card-group">${cat.group}</span>
+    `;
+    card.addEventListener('click', () => openModal(cat));
+    scroll.appendChild(card);
+  });
+
+  wrap.appendChild(scroll);
+  row.appendChild(wrap);
+
+  // Arrow scroll logic
+  const SCROLL_STEP = 182 * 3;
+  const btnPrev = header.querySelector('.row-arrow[data-dir="-1"]');
+  const btnNext = header.querySelector('.row-arrow[data-dir="1"]');
+
+  const updateArrows = () => {
+    const { scrollLeft, scrollWidth, clientWidth } = scroll;
+    if (btnPrev) btnPrev.classList.toggle('disabled', scrollLeft <= 0);
+    if (btnNext) btnNext.classList.toggle('disabled', scrollLeft + clientWidth >= scrollWidth - 5);
+  };
+
+  if (btnPrev) btnPrev.addEventListener('click', () => scroll.scrollBy({ left: -SCROLL_STEP, behavior: 'smooth' }));
+  if (btnNext) btnNext.addEventListener('click', () => scroll.scrollBy({ left: SCROLL_STEP, behavior: 'smooth' }));
+
+  scroll.addEventListener('scroll', updateArrows, { passive: true });
+  setTimeout(updateArrows, 100);
+
+  return row;
+}
+
 function buildCategoryRows() {
   const container = document.getElementById('rows-container');
 
@@ -268,86 +334,17 @@ function buildCategoryRows() {
     if (group === 'Tus Favoritos') {
       cats = _favorites.map(id => CATEGORIES.find(c => c.id === id)).filter(Boolean);
     } else if (group === 'Todos') {
-      cats = [...CATEGORIES].sort((a,b) => a.name.localeCompare(b.name));
+      cats = [...CATEGORIES].sort((a, b) => a.name.localeCompare(b.name));
     } else {
       cats = CATEGORIES.filter(c => c.group === group);
     }
 
     if (cats.length === 0) return;
 
-    const row = document.createElement('div');
-    row.className = 'row';
-    row.id = `row-${group.replace(/\s+/g, '-').toLowerCase()}`;
-
-    // Header: title + arrows
-    const header = document.createElement('div');
-    header.className = 'row-header';
-    header.innerHTML = `
-      <h3 class="row-title">${group} <span>${cats.length} categorías</span></h3>
-      <div class="row-arrows">
-        <button class="row-arrow" data-dir="-1" aria-label="Anterior">&#8249;</button>
-        <button class="row-arrow" data-dir="1" aria-label="Siguiente">&#8250;</button>
-      </div>
-    `;
-    row.appendChild(header);
-
-    const wrap = document.createElement('div');
-    wrap.className = 'row-scroll-wrap';
-
-    const scroll = document.createElement('div');
-    scroll.className = 'row-scroll';
-
-    cats.forEach(cat => {
-      const card = document.createElement('div');
-      card.className = 'cat-card';
-      
-      const logoFile = LOGO_MAP[cat.id];
-      const logoHtml = logoFile 
-        ? `<img src="images/categories/${logoFile}" class="cat-card-logo" alt="${cat.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">`
-        : '';
-
-      const isFav = _favorites.includes(cat.id);
-      card.innerHTML = `
-        <div class="cat-card-glow"></div>
-        <button class="cat-fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite(event, '${cat.id}')">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="${isFav ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-        </button>
-        ${logoHtml}
-        <span class="cat-card-name">${cat.name}</span>
-        <span class="cat-card-group">${cat.group}</span>
-      `;
-      card.addEventListener('click', () => openModal(cat));
-      scroll.appendChild(card);
-    });
-
-    wrap.appendChild(scroll);
-    row.appendChild(wrap);
-    container.appendChild(row);
-
-    // Arrow scroll logic
-    const SCROLL_STEP = 182 * 3; // ~3 cards
-    const btnPrev = header.querySelector('.row-arrow[data-dir="-1"]');
-    const btnNext = header.querySelector('.row-arrow[data-dir="1"]');
-
-    const updateArrows = () => {
-      const { scrollLeft, scrollWidth, clientWidth } = scroll;
-      if (btnPrev) btnPrev.classList.toggle('disabled', scrollLeft <= 0);
-      // Use a small threshold for floating point precision issues
-      if (btnNext) btnNext.classList.toggle('disabled', scrollLeft + clientWidth >= scrollWidth - 5);
-    };
-
-    if (btnPrev) btnPrev.addEventListener('click', () => {
-      scroll.scrollBy({ left: -SCROLL_STEP, behavior: 'smooth' });
-    });
-    if (btnNext) btnNext.addEventListener('click', () => {
-      scroll.scrollBy({ left: SCROLL_STEP, behavior: 'smooth' });
-    });
-
-    scroll.addEventListener('scroll', updateArrows, { passive: true });
-    // Initial state after a small delay to ensure cards are rendered
-    setTimeout(updateArrows, 100);
+    container.appendChild(buildSingleRow(group, cats));
   });
 }
+
 
 // ─── MODAL ────────────────────────────────────────────────────────────────────
 let _modalOpen = false;
