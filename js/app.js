@@ -427,10 +427,19 @@ async function openModal(cat) {
   // Sort: gratis first, then pago, then pirata last
   const sorted = [...cat.platforms].sort((a, b) => {
     // rbtv77 is ALWAYS the very last item
-    if (a === 'rbtv77') return 1;
-    if (b === 'rbtv77') return -1;
-    const ta = (PLATFORMS[a]?.type || '').toLowerCase();
-    const tb = (PLATFORMS[b]?.type || '').toLowerCase();
+    if (a === 'rbtv77' && b !== 'rbtv77') return 1;
+    if (b === 'rbtv77' && a !== 'rbtv77') return -1;
+    
+    // No URL items go to the bottom
+    const pA = PLATFORMS[a];
+    const pB = PLATFORMS[b];
+    const hasUrlA = pA && pA.url && pA.url !== null;
+    const hasUrlB = pB && pB.url && pB.url !== null;
+    if (!hasUrlA && hasUrlB) return 1;
+    if (hasUrlA && !hasUrlB) return -1;
+
+    const ta = (pA?.type || '').toLowerCase();
+    const tb = (pB?.type || '').toLowerCase();
     if (ta === 'pirata' && tb !== 'pirata') return 1;
     if (tb === 'pirata' && ta !== 'pirata') return -1;
     if (ta.includes('gratis') && !tb.includes('gratis')) return -1;
@@ -458,8 +467,7 @@ async function buildPlatItem(key) {
   if (isPago) {
     typeClass = 'type-pago';
     if (isGratis) {
-      const isCable = (p.type && p.type.toLowerCase().includes('cable')) || (p.name && p.name.toLowerCase().includes('cable'));
-      priceStr = isCable ? 'Sin precio (CABLE)' : 'Sin precio';
+      priceStr = 'Sin precio (CABLE)';
     } else {
       const ars = await convertToARSWithCommission(p.price, p.cur || 'ARS', 0);
       priceStr = formatPrice(ars);
