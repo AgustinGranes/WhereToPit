@@ -342,6 +342,8 @@ img { display: block; }
   gap: 12px;
   overflow-x: auto;
   padding: 4px 0 12px 24px;
+  scroll-padding: 0 24px;
+  scroll-snap-type: x mandatory;
   -ms-overflow-style: none;
   scrollbar-width: none;
   scroll-behavior: smooth;
@@ -364,6 +366,7 @@ img { display: block; }
   align-items: center;
   justify-content: flex-end;
   cursor: pointer;
+  scroll-snap-align: start;
   transition: transform .3s cubic-bezier(0.4, 0, 0.2, 1), border-color .3s;
   position: relative;
   overflow: hidden;
@@ -371,6 +374,7 @@ img { display: block; }
   padding: 10px 10px 14px;
 }
 .cat-card:last-child {
+  scroll-snap-align: end;
   margin-right: 24px;
 }
 .cat-card:hover { 

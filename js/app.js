@@ -352,11 +352,21 @@ function buildSingleRow(group, cats) {
 
   if (btnPrev) btnPrev.addEventListener('click', () => {
     const step = Math.max(scroll.clientWidth - 50, 180);
-    scroll.scrollBy({ left: -step, behavior: 'smooth' });
+    if (scroll.scrollLeft - step <= 0) {
+      scroll.scrollTo({ left: 0, behavior: 'smooth' });
+    } else {
+      scroll.scrollBy({ left: -step, behavior: 'smooth' });
+    }
   });
   if (btnNext) btnNext.addEventListener('click', () => {
     const step = Math.max(scroll.clientWidth - 50, 180);
-    scroll.scrollBy({ left: step, behavior: 'smooth' });
+    // Same for right edge, just in case
+    const maxScroll = scroll.scrollWidth - scroll.clientWidth;
+    if (scroll.scrollLeft + step >= maxScroll) {
+      scroll.scrollTo({ left: maxScroll, behavior: 'smooth' });
+    } else {
+      scroll.scrollBy({ left: step, behavior: 'smooth' });
+    }
   });
 
   scroll.addEventListener('scroll', updateArrows, { passive: true });
