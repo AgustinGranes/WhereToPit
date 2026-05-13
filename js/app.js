@@ -38,13 +38,41 @@ function toggleFavorite(e, catId) {
   if (newFavCats.length === 0) {
     if (existingFavRow) existingFavRow.remove();
   } else {
-    const newRow = buildSingleRow('Tus Favoritos', newFavCats);
     if (existingFavRow) {
-      const oldScroll = existingFavRow.querySelector('.row-scroll')?.scrollLeft || 0;
-      container.replaceChild(newRow, existingFavRow);
-      const newScroll = document.getElementById(favRowId)?.querySelector('.row-scroll');
-      if (newScroll) newScroll.scrollLeft = oldScroll;
+      const scroll = existingFavRow.querySelector('.row-scroll');
+      const countSpan = existingFavRow.querySelector('.row-title span');
+      if (countSpan) countSpan.textContent = `${newFavCats.length} categorías`;
+      
+      if (!isFav) {
+        const cat = CATEGORIES.find(c => c.id === catId);
+        if (cat && scroll) {
+          const card = document.createElement('div');
+          card.className = 'cat-card';
+          card.dataset.id = cat.id;
+
+          const logoFile = LOGO_MAP[cat.id];
+          const logoHtml = logoFile ? `<img src="images/categories/${logoFile}" class="cat-card-logo" alt="${cat.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">` : '';
+
+          card.innerHTML = `
+            <div class="cat-card-glow"></div>
+            <button class="cat-fav-btn active" onclick="toggleFavorite(event, '${cat.id}')">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+            </button>
+            ${logoHtml}
+            <span class="cat-card-name">${cat.name}</span>
+            <span class="cat-card-group">${cat.group}</span>
+          `;
+          card.addEventListener('click', () => openModal(cat));
+          scroll.appendChild(card);
+        }
+      } else {
+        if (scroll) {
+          const cardToRemove = Array.from(scroll.querySelectorAll('.cat-card')).find(c => c.dataset.id === catId || c.innerHTML.includes(`'${catId}'`));
+          if (cardToRemove) cardToRemove.remove();
+        }
+      }
     } else {
+      const newRow = buildSingleRow('Tus Favoritos', newFavCats);
       container.insertBefore(newRow, container.firstChild);
     }
   }
@@ -288,6 +316,7 @@ function buildSingleRow(group, cats) {
   cats.forEach(cat => {
     const card = document.createElement('div');
     card.className = 'cat-card';
+    card.dataset.id = cat.id;
 
     const logoFile = LOGO_MAP[cat.id];
     const logoHtml = logoFile
