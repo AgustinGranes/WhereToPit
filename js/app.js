@@ -400,15 +400,20 @@ async function buildPlatItem(key) {
 
   const isGratis = p.price == null || p.price === 0;
   const isPirata = p.type === 'Pirata';
+  const isPago = p.type.toLowerCase().includes('pago');
 
-  let priceStr = 'Gratis';
+  let priceStr = isGratis ? 'Gratis' : '';
   let typeClass = 'type-gratis';
 
   if (p.type.toLowerCase().includes('vpn')) typeClass = 'type-vpn';
-  if (!isGratis) {
+  if (isPago) {
     typeClass = 'type-pago';
-    const ars = await convertToARSWithCommission(p.price, p.cur || 'ARS', 0);
-    priceStr = formatPrice(ars);
+    if (isGratis) {
+      priceStr = 'Sin precio';
+    } else {
+      const ars = await convertToARSWithCommission(p.price, p.cur || 'ARS', 0);
+      priceStr = formatPrice(ars);
+    }
   }
   if (isPirata) { typeClass = 'type-pirata'; priceStr = 'Pirata'; }
 
