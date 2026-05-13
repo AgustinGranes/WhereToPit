@@ -40,7 +40,10 @@ function toggleFavorite(e, catId) {
   } else {
     const newRow = buildSingleRow('Tus Favoritos', newFavCats);
     if (existingFavRow) {
+      const oldScroll = existingFavRow.querySelector('.row-scroll')?.scrollLeft || 0;
       container.replaceChild(newRow, existingFavRow);
+      const newScroll = document.getElementById(favRowId)?.querySelector('.row-scroll');
+      if (newScroll) newScroll.scrollLeft = oldScroll;
     } else {
       container.insertBefore(newRow, container.firstChild);
     }

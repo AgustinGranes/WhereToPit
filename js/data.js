@@ -132,7 +132,7 @@ const PLATFORMS = {
 // ─── CATEGORIES ──────────────────────────────────────────────────────────────
 const CATEGORIES = [
   { id:'wrc',         name:'WRC',               group:'Rally',
-    platforms:['rallytv_m','canalplus','eurosport_max_eu','redbulltv','acestrlms','pitsport','rbtv77'] },
+    platforms:['rallytv_m','canalplus','eurosport_max_eu','acestrlms','pitsport','rbtv77'] },
   { id:'erx',         name:'World RX',           group:'Rally',
     platforms:['rallytv_m'] },
 

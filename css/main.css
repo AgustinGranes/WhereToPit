@@ -341,16 +341,19 @@ img { display: block; }
   display: flex;
   gap: 12px;
   overflow-x: auto;
-  padding: 4px 24px 12px;   /* uniform left/right 24px */
-  scroll-padding: 0 24px;   /* tells snap logic to respect the 24px margin */
+  padding: 4px 0 12px 24px;
+  scroll-padding: 0 24px;
   scroll-snap-type: x mandatory;
   -ms-overflow-style: none;
   scrollbar-width: none;
   scroll-behavior: smooth;
   overscroll-behavior-x: contain;
   -webkit-overflow-scrolling: touch;
-  /* Align all items to the same baseline */
   align-items: stretch;
+}
+.row-scroll::after {
+  content: "";
+  flex: 0 0 12px;
 }
 .row-scroll::-webkit-scrollbar { display: none; }
 
@@ -374,7 +377,7 @@ img { display: block; }
   padding: 10px 10px 14px;
 }
 .cat-card:last-child {
-  scroll-snap-align: end;
+  /* Removed scroll-snap-align to prevent overscroll empty spaces on mobile */
 }
 .cat-card:hover { 
   transform: scale(1.08); 
