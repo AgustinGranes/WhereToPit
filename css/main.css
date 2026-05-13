@@ -898,10 +898,18 @@ img { display: block; }
 .loading-logo-wrap {
   justify-content: center;
   align-items: center;
-  gap: 28px;
+  flex-direction: column;
+  gap: 12px;
   margin-bottom: 8px;
   display: flex;
 }
+.loading-brand-name {
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  color: #fff;
+}
+.loading-brand-name span { color: var(--red); }
 .loading-logo-exclusive {
   object-fit: contain;
   filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.2));
@@ -921,7 +929,7 @@ img { display: block; }
   border-radius: 10px;
   height: 100%;
   box-shadow: 0 0 10px rgba(10, 132, 255, 0.4);
-  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: width 4.8s ease-in-out;
 }
 .loading-text {
   color: #a0a0a0;
