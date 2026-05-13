@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       setTimeout(() => {
         loadingScreen.style.display = 'none';
       }, 500);
-    }, 5000);
+    }, 4000);
   }
 
   // Scroll -> nav solid

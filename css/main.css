@@ -899,7 +899,7 @@ img { display: block; }
   justify-content: center;
   align-items: center;
   flex-direction: column;
-  gap: 12px;
+  gap: 0px;
   margin-bottom: 8px;
   display: flex;
 }
@@ -929,7 +929,7 @@ img { display: block; }
   border-radius: 10px;
   height: 100%;
   box-shadow: 0 0 10px rgba(10, 132, 255, 0.4);
-  transition: width 4.8s ease-in-out;
+  transition: width 3.8s ease-in-out;
 }
 .loading-text {
   color: #a0a0a0;
