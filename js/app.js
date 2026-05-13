@@ -101,6 +101,21 @@ function updateModalFavBtn(catId) {
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
+  // Loading screen logic
+  const loadingScreen = document.getElementById('loadingScreen');
+  const progressBar = document.getElementById('loadingProgressBar');
+  if (loadingScreen && progressBar) {
+    setTimeout(() => {
+      progressBar.style.width = '100%';
+    }, 100);
+    setTimeout(() => {
+      loadingScreen.style.opacity = '0';
+      setTimeout(() => {
+        loadingScreen.style.display = 'none';
+      }, 500);
+    }, 1200);
+  }
+
   // Scroll -> nav solid
   window.addEventListener('scroll', () => {
     document.getElementById('topNav').classList.toggle('solid', window.scrollY > 10);
