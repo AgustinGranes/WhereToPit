@@ -198,9 +198,9 @@ const CATEGORIES = [
     platforms:['msptv_m','rande','viaplay','dtm_yt','acestrlms'] },
 
   { id:'nascar_cup',  name:'NASCAR Cup',         group:'Stock Cars',
-    platforms:['dp_prem','sling','youtubetv','prime_video_usa','max_basic','max_std','max_prem','discovery_plus_uk','acestrlms','pitsport','rbtv77'] },
+    platforms:['dp_prem','sling','youtubetv','prime_video_usa','max_basic','max_std','max_prem','discovery_plus_uk','somos_fox','acestrlms','pitsport','rbtv77'] },
   { id:'nascar_truck',name:'NASCAR Truck',        group:'Stock Cars',
-    platforms:['max_basic','max_std','max_prem','sling','youtubetv','acestrlms','pitsport','rbtv77'] },
+    platforms:['max_basic','max_std','max_prem','sling','youtubetv','somos_fox','acestrlms','pitsport','rbtv77'] },
   { id:'nascar_or',   name:"NASCAR O'Reilly",     group:'Stock Cars',
     platforms:['max_basic','max_std','max_prem','the_cw_app','somos_fox','acestrlms','pitsport','rbtv77'] },
   { id:'arca',        name:'ARCA Menards',        group:'Stock Cars',
