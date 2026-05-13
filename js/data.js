@@ -36,6 +36,8 @@ const PLATFORMS = {
   motorsporttv_f:{ name:'Motorsport.tv',       type:'Gratis',                url:'https://motorsport.tv' },
   tycsports_g:   { name:'TyC Sports',          type:'Gratis',                url:null },
   elnueve_c:     { name:'El Nueve (Cable)',    type:'Pago (Cable)', price:0, cur:'ARS', url:null },
+  tycsports_c:   { name:'TyC Sports (Cable)',  type:'Pago (Cable)', price:0, cur:'ARS', url:null },
+  tycsports_play:{ name:'TyC Sports Play',     type:'Pago (Cable)', price:0, cur:'ARS', url:'https://play.tycsports.com/' },
 
   // PIRATAS
   acestrlms:     { name:'Acestrlms',           type:'Pirata',                url:'https://acestrlms.pages.dev/' },
@@ -159,7 +161,7 @@ const CATEGORIES = [
   { id:'f3arg',       name:'Formula 3 Argentina', group:'Fórmula',
     platforms:['motorplay','elnueve_c'] },
   { id:'fnac',        name:'Formula Nacional',   group:'Fórmula',
-    platforms:['motorplay','elnueve_c'] },
+    platforms:['tycsports_c','tycsports_play'] },
 
   { id:'wec',         name:'WEC',                group:'Resistencia',
     platforms:['fiawec_s','eurosport_max_eu','tntsports','discovery_plus_uk','jsports','max_basic','max_std','max_prem','msptv_m','fox_latam','somos_fox','acestrlms'] },
@@ -226,16 +228,16 @@ const CATEGORIES = [
   { id:'tp',          name:'Turismo Pista',      group:'Stock Cars',
     platforms:['motorplay','elnueve_c'] },
   { id:'procar',      name:'Procar 4000',        group:'Stock Cars',
-    platforms:['motorplay','elnueve_c'] },
+    platforms:['tycsports_c','tycsports_play'] },
   { id:'toprace',     name:'Top Race',           group:'Stock Cars',
-    platforms:['motorplay','elnueve_c'] },
+    platforms:['tycsports_c','tycsports_play'] },
 
   { id:'supercars',   name:'Supercars',          group:'Touring Cars',
     platforms:['kayo_std','seven_network','superview','supercars_yt','tntsports','acestrlms'] },
   { id:'btcc',        name:'BTCC',               group:'Touring Cars',
     platforms:['btcc_yt','itvx','racer_network','acestrlms'] },
   { id:'tc2000',      name:'TC2000',             group:'Touring Cars',
-    platforms:['motorplay','elnueve_c'] },
+    platforms:['tycsports_c','tycsports_play'] },
   { id:'fiat',        name:'Fiat Competizione',  group:'Touring Cars',
     platforms:['motorplay','elnueve_c'] },
   { id:'tcr_world',   name:'TCR World Tour',      group:'Touring Cars',
