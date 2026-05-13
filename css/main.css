@@ -908,7 +908,16 @@ img { display: block; }
   font-weight: 900;
   letter-spacing: -0.5px;
   color: #fff;
-  margin-top: -16px;
+  margin-top: -28px;
+  animation: pulseHeart 1.5s infinite;
+}
+@keyframes pulseHeart {
+  0% { transform: scale(1); }
+  15% { transform: scale(1.08); }
+  30% { transform: scale(1); }
+  45% { transform: scale(1.08); }
+  60% { transform: scale(1); }
+  100% { transform: scale(1); }
 }
 .loading-brand-name span { color: var(--red); }
 .loading-logo-exclusive {
