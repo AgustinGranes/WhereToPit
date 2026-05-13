@@ -144,9 +144,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Search logic
   const catSearch = document.getElementById('catSearch');
+  const searchClearBtn = document.getElementById('searchClearBtn');
+  
+  if (searchClearBtn && catSearch) {
+    searchClearBtn.addEventListener('click', () => {
+      catSearch.value = '';
+      catSearch.dispatchEvent(new Event('input'));
+      catSearch.focus();
+    });
+  }
+
   if (catSearch) {
     catSearch.addEventListener('input', (e) => {
       const q = e.target.value.toLowerCase().trim();
+      if (searchClearBtn) searchClearBtn.style.display = q.length > 0 ? 'flex' : 'none';
       const rowsContainer = document.getElementById('rows-container');
       const searchContainer = document.getElementById('search-results-container');
       const billboard = document.querySelector('.billboard');
