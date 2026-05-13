@@ -341,7 +341,6 @@ function buildSingleRow(group, cats) {
   row.appendChild(wrap);
 
   // Arrow scroll logic
-  const SCROLL_STEP = 182 * 3;
   const btnPrev = header.querySelector('.row-arrow[data-dir="-1"]');
   const btnNext = header.querySelector('.row-arrow[data-dir="1"]');
 
@@ -351,8 +350,14 @@ function buildSingleRow(group, cats) {
     if (btnNext) btnNext.classList.toggle('disabled', Math.ceil(scrollLeft + clientWidth) >= scrollWidth - 2);
   };
 
-  if (btnPrev) btnPrev.addEventListener('click', () => scroll.scrollBy({ left: -SCROLL_STEP, behavior: 'smooth' }));
-  if (btnNext) btnNext.addEventListener('click', () => scroll.scrollBy({ left: SCROLL_STEP, behavior: 'smooth' }));
+  if (btnPrev) btnPrev.addEventListener('click', () => {
+    const step = Math.max(scroll.clientWidth - 50, 180);
+    scroll.scrollBy({ left: -step, behavior: 'smooth' });
+  });
+  if (btnNext) btnNext.addEventListener('click', () => {
+    const step = Math.max(scroll.clientWidth - 50, 180);
+    scroll.scrollBy({ left: step, behavior: 'smooth' });
+  });
 
   scroll.addEventListener('scroll', updateArrows, { passive: true });
   setTimeout(updateArrows, 100);
