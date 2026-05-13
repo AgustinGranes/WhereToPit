@@ -908,6 +908,7 @@ img { display: block; }
   font-weight: 900;
   letter-spacing: -0.5px;
   color: #fff;
+  margin-top: -16px;
 }
 .loading-brand-name span { color: var(--red); }
 .loading-logo-exclusive {
@@ -929,7 +930,7 @@ img { display: block; }
   border-radius: 10px;
   height: 100%;
   box-shadow: 0 0 10px rgba(10, 132, 255, 0.4);
-  transition: width 3.8s ease-in-out;
+  transition: width 2.8s ease-in-out;
 }
 .loading-text {
   color: #a0a0a0;
