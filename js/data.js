@@ -128,7 +128,6 @@ const PLATFORMS = {
   prime_video_usa: { name:'Prime Video (EEUU)',        type:'Pago (VPN EEUU)', price:14.99,    cur:'USD', url:'https://www.amazon.com/prime' },
   the_cw_app:    { name:'The CW / CW App',             type:'Gratis (VPN EEUU)',      url:'https://www.cwtv.com' },
   foxone_mx:     { name:'FOX One (México)',            type:'Pago (VPN México)', price:0, cur:'MXN', url:null },
-  youtube_fox_latam:{ name:'YouTube FOX Latam',        type:'Gratis (YouTube)',       url:'https://www.youtube.com/@FOXLatinAmerica' },
   prime_foxone_mx: { name:'Prime Video (FOX One MX)',  type:'Pago (VPN México)', price:0, cur:'MXN', url:'https://www.primevideo.com' },
   fox_latam:       { name:'FOX (México/Centroamérica)',type:'Pago (VPN México)', price:0, cur:'MXN', url:null },
   fox_usa:         { name:'FOX / FS1 / FS2 (EEUU)',    type:'Pago (VPN EEUU)', price:0, cur:'USD', url:'https://www.foxsports.com' },
@@ -137,7 +136,7 @@ const PLATFORMS = {
 // ─── CATEGORIES ──────────────────────────────────────────────────────────────
 const CATEGORIES = [
   { id:'wrc',         name:'WRC',               group:'Rally',
-    platforms:['rallytv_m','canalplus','eurosport_max_eu','fox_latam','youtube_fox_latam','acestrlms','pitsport','rbtv77'] },
+    platforms:['rallytv_m','canalplus','eurosport_max_eu','fox_latam','somos_fox','acestrlms','pitsport','rbtv77'] },
   { id:'erx',         name:'World RX',           group:'Rally',
     platforms:['rallytv_m'] },
 
@@ -163,9 +162,9 @@ const CATEGORIES = [
     platforms:['motorplay','elnueve_c'] },
 
   { id:'wec',         name:'WEC',                group:'Resistencia',
-    platforms:['fiawec_s','eurosport_max_eu','tntsports','discovery_plus_uk','jsports','max_basic','max_std','max_prem','msptv_m','fox_latam','youtube_fox_latam','acestrlms'] },
+    platforms:['fiawec_s','eurosport_max_eu','tntsports','discovery_plus_uk','jsports','max_basic','max_std','max_prem','msptv_m','fox_latam','somos_fox','acestrlms'] },
   { id:'imsa',        name:'IMSA',               group:'Resistencia',
-    platforms:['imsa_yt','peacock_p','foxone_mx','prime_foxone_mx','youtube_fox_latam','sling','youtubetv','viaplay','msptv_m','acestrlms','pitsport','rbtv77'] },
+    platforms:['imsa_yt','peacock_p','foxone_mx','prime_foxone_mx','somos_fox','sling','youtubetv','viaplay','msptv_m','acestrlms','pitsport','rbtv77'] },
   { id:'elms',        name:'ELMS',               group:'Resistencia',
     platforms:['fiawec_s','elms_yt','acestrlms'] },
   { id:'alms',        name:'ALMS',               group:'Resistencia',
@@ -201,13 +200,13 @@ const CATEGORIES = [
     platforms:['msptv_m','rande','viaplay','dtm_yt','acestrlms'] },
 
   { id:'nascar_cup',  name:'NASCAR Cup',         group:'Stock Cars',
-    platforms:['dp_prem','foxone_mx','prime_foxone_mx','youtube_fox_latam','sling','youtubetv','prime_video_usa','max_basic','max_std','max_prem','discovery_plus_uk','acestrlms','pitsport','rbtv77'] },
+    platforms:['dp_prem','foxone_mx','prime_foxone_mx','somos_fox','sling','youtubetv','prime_video_usa','max_basic','max_std','max_prem','discovery_plus_uk','acestrlms','pitsport','rbtv77'] },
   { id:'nascar_truck',name:'NASCAR Truck',        group:'Stock Cars',
-    platforms:['max_basic','max_std','max_prem','foxone_mx','prime_foxone_mx','youtube_fox_latam','sling','youtubetv','acestrlms','pitsport','rbtv77'] },
+    platforms:['max_basic','max_std','max_prem','foxone_mx','prime_foxone_mx','somos_fox','sling','youtubetv','acestrlms','pitsport','rbtv77'] },
   { id:'nascar_or',   name:"NASCAR O'Reilly",     group:'Stock Cars',
-    platforms:['max_basic','max_std','max_prem','the_cw_app','foxone_mx','prime_foxone_mx','youtube_fox_latam','acestrlms','pitsport','rbtv77'] },
+    platforms:['max_basic','max_std','max_prem','the_cw_app','foxone_mx','prime_foxone_mx','somos_fox','acestrlms','pitsport','rbtv77'] },
   { id:'arca',        name:'ARCA Menards',        group:'Stock Cars',
-    platforms:['floracing','foxone_mx','prime_foxone_mx','youtube_fox_latam','sling','youtubetv','acestrlms'] },
+    platforms:['floracing','foxone_mx','prime_foxone_mx','somos_fox','sling','youtubetv','acestrlms'] },
   { id:'stock',       name:'Stock Car Brasil',    group:'Stock Cars',
     platforms:['band_br','bandsports_br','stockcar_yt','globoplay','acestrlms'] },
   { id:'tc',          name:'TC',                 group:'Stock Cars',
