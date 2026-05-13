@@ -414,7 +414,8 @@ async function buildPlatItem(key) {
   if (isPago) {
     typeClass = 'type-pago';
     if (isGratis) {
-      priceStr = 'Sin precio';
+      const isCable = (p.type && p.type.toLowerCase().includes('cable')) || (p.name && p.name.toLowerCase().includes('cable'));
+      priceStr = isCable ? 'Sin precio (CABLE)' : 'Sin precio';
     } else {
       const ars = await convertToARSWithCommission(p.price, p.cur || 'ARS', 0);
       priceStr = formatPrice(ars);
