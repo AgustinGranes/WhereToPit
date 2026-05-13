@@ -351,10 +351,7 @@ img { display: block; }
   -webkit-overflow-scrolling: touch;
   align-items: stretch;
 }
-.row-scroll::after {
-  content: "";
-  flex: 0 0 12px;
-}
+
 .row-scroll::-webkit-scrollbar { display: none; }
 
 .cat-card {
@@ -377,7 +374,7 @@ img { display: block; }
   padding: 10px 10px 14px;
 }
 .cat-card:last-child {
-  /* Removed scroll-snap-align to prevent overscroll empty spaces on mobile */
+  margin-right: 24px;
 }
 .cat-card:hover { 
   transform: scale(1.08); 

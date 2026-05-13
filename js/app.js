@@ -169,12 +169,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   window.WTP_GET_FAVS = () => _favorites;
   window.WTP_GET_EXPENSES = () => _calcExpenses;
   window.WTP_UPDATE_FAVS = (favs) => {
+    if (JSON.stringify(_favorites) === JSON.stringify(favs)) return;
     _favorites = favs;
     localStorage.setItem('wtp_favs', JSON.stringify(_favorites));
     document.getElementById('rows-container').innerHTML = '';
     buildCategoryRows();
   };
   window.WTP_UPDATE_EXPENSES = (exps) => {
+    if (JSON.stringify(_calcExpenses) === JSON.stringify(exps)) return;
     _calcExpenses = exps;
     localStorage.setItem('wtp_calc', JSON.stringify(_calcExpenses));
     renderCalcList();
@@ -317,7 +319,7 @@ function buildSingleRow(group, cats) {
   const updateArrows = () => {
     const { scrollLeft, scrollWidth, clientWidth } = scroll;
     if (btnPrev) btnPrev.classList.toggle('disabled', scrollLeft <= 0);
-    if (btnNext) btnNext.classList.toggle('disabled', scrollLeft + clientWidth >= scrollWidth - 5);
+    if (btnNext) btnNext.classList.toggle('disabled', Math.ceil(scrollLeft + clientWidth) >= scrollWidth - 2);
   };
 
   if (btnPrev) btnPrev.addEventListener('click', () => scroll.scrollBy({ left: -SCROLL_STEP, behavior: 'smooth' }));
