@@ -441,11 +441,13 @@ async function openModal(cat) {
     if (a === 'rbtv77' && b !== 'rbtv77') return 1;
     if (b === 'rbtv77' && a !== 'rbtv77') return -1;
     
-    // No URL items go to the bottom
+    // No URL items (or Cable items) go to the bottom
     const pA = PLATFORMS[a];
     const pB = PLATFORMS[b];
-    const hasUrlA = pA && pA.url && pA.url !== null;
-    const hasUrlB = pB && pB.url && pB.url !== null;
+    const isCableA = pA && pA.type && pA.type.toLowerCase().includes('pago') && (pA.price == null || pA.price === 0);
+    const isCableB = pB && pB.type && pB.type.toLowerCase().includes('pago') && (pB.price == null || pB.price === 0);
+    const hasUrlA = pA && pA.url && pA.url !== null && !isCableA;
+    const hasUrlB = pB && pB.url && pB.url !== null && !isCableB;
     if (!hasUrlA && hasUrlB) return 1;
     if (hasUrlA && !hasUrlB) return -1;
 
@@ -489,7 +491,8 @@ async function buildPlatItem(key) {
   const el = document.createElement('div');
   el.className = 'plat-item';
 
-  const hasLink = p.url && p.url !== null;
+  const isCableLabel = priceStr === 'Sin precio (CABLE)';
+  const hasLink = p.url && p.url !== null && !isCableLabel;
   el.innerHTML = `
     <div class="plat-info">
       <div class="plat-name">${p.name}</div>
