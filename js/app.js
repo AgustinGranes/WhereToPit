@@ -234,7 +234,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     _calcExpenses = exps;
     localStorage.setItem('wtp_calc', JSON.stringify(_calcExpenses));
     renderCalcList();
-    renderBillingSummary();
   };
   
   // Load expenses from local storage if available
@@ -242,7 +241,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   buildCategoryRows();
   buildCalculator();
-  renderBillingSummary();
   
   // Warm up rates
   getRateSummary().then(summary => {
@@ -678,7 +676,6 @@ async function submitAddExpense() {
   _calcExpenses.push(newItem);
   closeModal();
   renderCalcList();
-  renderBillingSummary();
   // Sync to Firebase
   if (window.saveDataToFirebase) window.saveDataToFirebase(_favorites, _calcExpenses);
 }
@@ -771,7 +768,6 @@ async function renderCalcList() {
 window.removeExpense = (index) => {
   _calcExpenses.splice(index, 1);
   renderCalcList();
-  renderBillingSummary();
   if (window.saveDataToFirebase) window.saveDataToFirebase(_favorites, _calcExpenses);
 };
 
@@ -830,7 +826,6 @@ async function submitEditExpense(index) {
   _calcExpenses[index] = updatedItem;
   closeModal();
   renderCalcList();
-  renderBillingSummary();
   if (window.saveDataToFirebase) window.saveDataToFirebase(_favorites, _calcExpenses);
 }
 
@@ -839,49 +834,4 @@ window.submitEditExpense = submitEditExpense;
 
 window.openAddExpenseModal = openAddExpenseModal;
 window.submitAddExpense = submitAddExpense;
-
-function renderBillingSummary() {
-  const container = document.getElementById('billing-summary-container');
-  if (!container) return;
-
-  const expensesWithCycle = _calcExpenses.filter(e => e.billingCycle);
-  
-  if (expensesWithCycle.length === 0) {
-    container.style.display = 'none';
-    return;
-  }
-  
-  container.style.display = 'block';
-  
-  const today = new Date().getDate();
-  
-  let html = `
-    <div style="background: var(--surface1); border: 1px solid var(--border); border-radius: 12px; padding: 16px;">
-      <h3 style="margin: 0 0 12px 0; font-size: 16px; color: #fff;">Ciclos de Facturación (Mes Actual)</h3>
-      <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-  `;
-  
-  expensesWithCycle.forEach(item => {
-    const hasPassed = item.billingCycle <= today;
-    const icon = hasPassed 
-      ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>'
-      : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
-    
-    html += `
-      <div style="display: flex; align-items: center; gap: 6px; background: var(--surface2); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border);">
-        ${icon}
-        <span style="color: #fff; font-size: 14px; font-weight: 500;">${item.name}</span>
-        <span style="color: var(--text3); font-size: 13px;">(Día ${item.billingCycle})</span>
-      </div>
-    `;
-  });
-  
-  html += `
-      </div>
-    </div>
-  `;
-  
-  container.innerHTML = html;
-}
-window.renderBillingSummary = renderBillingSummary;
 
