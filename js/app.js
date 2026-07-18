@@ -234,6 +234,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     _calcExpenses = exps;
     localStorage.setItem('wtp_calc', JSON.stringify(_calcExpenses));
     renderCalcList();
+    renderBillingSummary();
   };
   
   // Load expenses from local storage if available
@@ -241,6 +242,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   buildCategoryRows();
   buildCalculator();
+  renderBillingSummary();
+  
   // Warm up rates
   getRateSummary().then(summary => {
     document.getElementById('rateNote').textContent = summary;
@@ -618,6 +621,10 @@ function openAddExpenseModal() {
         </div>
       </div>
 
+      <div class="form-group" style="margin-top:16px; margin-bottom:16px;">
+        <label>Ciclo de facturación (Día del mes 1-31) - Opcional</label>
+        <input type="number" class="form-input" id="billingCycleVal" placeholder="Ej: 5" min="1" max="31">
+      </div>
 
       <button id="modalSubmitBtn" class="add-submit-btn" onclick="submitAddExpense()">AGREGAR A LA LISTA</button>
     </div>
@@ -649,12 +656,13 @@ window.setSubCommission = (val) => {
 async function submitAddExpense() {
   const isSub = document.getElementById('tabSub')?.classList.contains('active') ?? true;
   let newItem = null;
+  const billingCycle = parseInt(document.getElementById('billingCycleVal')?.value) || null;
 
   if (isSub) {
     const key = document.getElementById('addSub').value;
     const p = PLATFORMS[key];
     const commissionPct = parseFloat(document.getElementById('subCommissionVal')?.value ?? 0) || 0;
-    newItem = { ...p, commission: commissionPct / 100, id: Date.now() + Math.random() };
+    newItem = { ...p, commission: commissionPct / 100, id: Date.now() + Math.random(), billingCycle };
   } else {
     const name = document.getElementById('customName').value.trim();
     const price = parseFloat(document.getElementById('customPrice').value);
@@ -664,12 +672,13 @@ async function submitAddExpense() {
       alert('Por favor ingresá un nombre y precio válido');
       return;
     }
-    newItem = { name, price, cur, type: 'Custom', commission: commissionPct / 100, id: Date.now() + Math.random() };
+    newItem = { name, price, cur, type: 'Custom', commission: commissionPct / 100, id: Date.now() + Math.random(), billingCycle };
   }
 
   _calcExpenses.push(newItem);
   closeModal();
   renderCalcList();
+  renderBillingSummary();
   // Sync to Firebase
   if (window.saveDataToFirebase) window.saveDataToFirebase(_favorites, _calcExpenses);
 }
@@ -710,9 +719,28 @@ async function renderCalcList() {
     const row = document.createElement('div');
     row.className = 'calc-row';
     const commLabel = commission > 0 ? `+${Math.round(commission * 100)}%` : 'sin recargo';
+    
+    let billingHtml = '';
+    if (item.billingCycle) {
+      const today = new Date().getDate();
+      const hasPassed = item.billingCycle <= today;
+      const icon = hasPassed 
+        ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>'
+        : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+      const cycleText = `Ciclo: ${item.billingCycle}`;
+      billingHtml = `
+        <span style="display:inline-flex; align-items:center; gap:4px; font-size:12px; color:var(--text2); background:var(--surface2); padding:2px 6px; border-radius:4px;">
+          ${icon} ${cycleText}
+        </span>
+      `;
+    }
+
     row.innerHTML = `
       <div class="calc-row-top">
-        <span class="calc-row-badge">${item.cur || 'ARS'}</span>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span class="calc-row-badge">${item.cur || 'ARS'}</span>
+          ${billingHtml}
+        </div>
         <button class="calc-row-remove" onclick="event.stopPropagation(); removeExpense(${i})" aria-label="Eliminar">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
@@ -736,6 +764,7 @@ async function renderCalcList() {
 window.removeExpense = (index) => {
   _calcExpenses.splice(index, 1);
   renderCalcList();
+  renderBillingSummary();
   if (window.saveDataToFirebase) window.saveDataToFirebase(_favorites, _calcExpenses);
 };
 
@@ -766,29 +795,35 @@ function openEditExpenseModal(index) {
     if (key) document.getElementById('addSub').value = key;
     document.getElementById('subCommissionVal').value = (item.commission || 0) * 100;
   }
+  
+  if (item.billingCycle) {
+    document.getElementById('billingCycleVal').value = item.billingCycle;
+  }
 }
 
 async function submitEditExpense(index) {
   const isSub = document.getElementById('tabSub')?.classList.contains('active') ?? true;
   let updatedItem = null;
+  const billingCycle = parseInt(document.getElementById('billingCycleVal')?.value) || null;
 
   if (isSub) {
     const key = document.getElementById('addSub').value;
     const p = PLATFORMS[key];
     const commissionPct = parseFloat(document.getElementById('subCommissionVal')?.value ?? 0) || 0;
-    updatedItem = { ...p, commission: commissionPct / 100, id: _calcExpenses[index].id };
+    updatedItem = { ...p, commission: commissionPct / 100, id: _calcExpenses[index].id, billingCycle };
   } else {
     const name = document.getElementById('customName').value.trim();
     const price = parseFloat(document.getElementById('customPrice').value);
     const cur = document.getElementById('customCur').value;
     const commissionPct = parseFloat(document.getElementById('customCommission')?.value ?? 0) || 0;
     if (!name || isNaN(price) || price <= 0) return alert('Datos inválidos');
-    updatedItem = { name, price, cur, type: 'Custom', commission: commissionPct / 100, id: _calcExpenses[index].id };
+    updatedItem = { name, price, cur, type: 'Custom', commission: commissionPct / 100, id: _calcExpenses[index].id, billingCycle };
   }
 
   _calcExpenses[index] = updatedItem;
   closeModal();
   renderCalcList();
+  renderBillingSummary();
   if (window.saveDataToFirebase) window.saveDataToFirebase(_favorites, _calcExpenses);
 }
 
@@ -797,4 +832,49 @@ window.submitEditExpense = submitEditExpense;
 
 window.openAddExpenseModal = openAddExpenseModal;
 window.submitAddExpense = submitAddExpense;
+
+function renderBillingSummary() {
+  const container = document.getElementById('billing-summary-container');
+  if (!container) return;
+
+  const expensesWithCycle = _calcExpenses.filter(e => e.billingCycle);
+  
+  if (expensesWithCycle.length === 0) {
+    container.style.display = 'none';
+    return;
+  }
+  
+  container.style.display = 'block';
+  
+  const today = new Date().getDate();
+  
+  let html = `
+    <div style="background: var(--surface1); border: 1px solid var(--border); border-radius: 12px; padding: 16px;">
+      <h3 style="margin: 0 0 12px 0; font-size: 16px; color: #fff;">Ciclos de Facturación (Mes Actual)</h3>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+  `;
+  
+  expensesWithCycle.forEach(item => {
+    const hasPassed = item.billingCycle <= today;
+    const icon = hasPassed 
+      ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>'
+      : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+    
+    html += `
+      <div style="display: flex; align-items: center; gap: 6px; background: var(--surface2); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border);">
+        ${icon}
+        <span style="color: #fff; font-size: 14px; font-weight: 500;">${item.name}</span>
+        <span style="color: var(--text3); font-size: 13px;">(Día ${item.billingCycle})</span>
+      </div>
+    `;
+  });
+  
+  html += `
+      </div>
+    </div>
+  `;
+  
+  container.innerHTML = html;
+}
+window.renderBillingSummary = renderBillingSummary;
 
