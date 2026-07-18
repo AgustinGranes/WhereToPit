@@ -687,6 +687,13 @@ async function renderCalcList() {
   const list = document.getElementById('calcList');
   list.innerHTML = '';
   
+  // Sort expenses by billing cycle (ascending, no date at the end)
+  _calcExpenses.sort((a, b) => {
+    const cycleA = a.billingCycle || 999;
+    const cycleB = b.billingCycle || 999;
+    return cycleA - cycleB;
+  });
+
   // 1. Add the "Add Expense" Card
   const addBtn = document.createElement('button');
   addBtn.className = 'add-expense-btn';
